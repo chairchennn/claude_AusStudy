@@ -19,6 +19,7 @@ export function startSession(material) {
     id: `s_${Date.now()}`,
     createdAt: new Date().toISOString(),
     material,
+    materialSummaryEn: null,
     qaTurns: [],
   };
   return session;
@@ -48,6 +49,10 @@ export async function generateQuestion() {
     schema: QUESTION_SCHEMA,
     maxTokens: 2000,
   });
+
+  if (result.materialSummaryEn) {
+    session.materialSummaryEn = result.materialSummaryEn;
+  }
 
   session.qaTurns.push({
     questionEn: result.questionEn,

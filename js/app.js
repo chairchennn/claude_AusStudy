@@ -24,6 +24,9 @@ const els = {
   materialInput: document.getElementById("materialInput"),
   startBtn: document.getElementById("startBtn"),
 
+  summarySection: document.getElementById("summarySection"),
+  materialSummaryEn: document.getElementById("materialSummaryEn"),
+
   stepQuestion: document.getElementById("step-question"),
   questionLoading: document.getElementById("questionLoading"),
   questionBox: document.getElementById("questionBox"),
@@ -84,9 +87,11 @@ function resetToInput() {
   hide(els.stepQuestion);
   hide(els.stepReview);
   hide(els.historySection);
+  hide(els.summarySection);
   show(els.stepInput);
   els.answerInput.value = "";
   els.historyList.innerHTML = "";
+  els.materialSummaryEn.textContent = "";
 }
 
 // ---- Flow: start practice ----
@@ -120,6 +125,10 @@ async function requestNextQuestion() {
 
   try {
     const q = await generateQuestion();
+    if (q.materialSummaryEn) {
+      els.materialSummaryEn.textContent = q.materialSummaryEn;
+      show(els.summarySection);
+    }
     els.questionEn.textContent = q.questionEn;
     els.questionZhHint.textContent = q.questionZhHint;
     show(els.questionBox);

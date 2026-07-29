@@ -1,2 +1,38 @@
-# claude_AusStudy
-trying to to build a app for my aus masters study
+# 學習練習 App（MVP）
+
+純前端（HTML/CSS/JS，無建置工具）的蘇格拉底式英文學習練習工具。目前為 MVP 版本，核心迴圈：
+
+**輸入素材 → AI 提問 → 你用英文回答 → AI 潤飾回饋**
+
+## 使用方式
+
+1. 用瀏覽器直接打開 `index.html`，或用任何靜態伺服器（例如 `python3 -m http.server`）啟動後開啟。
+2. 點右上角齒輪圖示，貼上你的 Claude API Key，選擇模型，儲存。
+3. 貼上學習素材，點「開始練習」。
+
+## ⚠️ 安全性提醒
+
+這是純前端應用，會直接從瀏覽器呼叫 Claude API：
+
+- API Key 存在瀏覽器的 `localStorage`，**只存在你自己的裝置上**，不會傳到任何第三方伺服器。
+- 但因為是前端直連，Key 仍可能被瀏覽器開發者工具看到。**只適合自己單機使用，不要把這個網頁部署成公開網站給別人使用**，否則你的 API Key 可能外洩。
+
+## 目前狀態（MVP）
+
+已完成：
+- 輸入模組
+- 提問模組（蘇格拉底式，英文題目 + 中文提示）
+- 回答與修改模組（原句/修正句/修改原因 對照表 + 中文翻譯）
+- 資料結構已包含 `understandingLevel`（AI 判斷這題的理解程度：clear / partial / confused），供未來篩選複習使用
+
+尚未實作（規劃中）：
+- 追問機制（根據 understandingLevel 決定深入追問或補充背景知識）
+- 紀錄模組（存成本機檔案、匯出/匯入）
+- 課堂資訊整理模組（to-do list）
+
+## 技術筆記
+
+- 每一輪「使用者回答 → AI 潤飾＋理解判斷」只呼叫一次 Claude API（`ANSWER_REVIEW_SCHEMA`），理解程度是在同一次呼叫中一起判斷出來的,
+  未來加上追問機制時，也會沿用同一次呼叫（讓 AI 同時回傳潤飾結果 + 下一步的追問或背景解釋），
+  避免每一輪使用者回答都要打兩次 API。
+- 使用 Claude 的 Structured Outputs（`output_config.format`）確保回傳一定是合法 JSON，不用自己做脆弱的字串解析。

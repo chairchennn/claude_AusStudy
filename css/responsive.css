@@ -1,0 +1,7 @@
+@media (max-width: 480px) {
+  main { padding: var(--spacing-3); }
+  .card { padding: var(--spacing-3); }
+  .card__actions { flex-direction: column; }
+  .card__actions .btn { width: 100%; }
+  .correction-table { font-size: 0.8rem; }
+}

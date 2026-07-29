@@ -127,6 +127,13 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script type="module" src="js/app.js"></script>
+  <!-- 依相依順序載入，用一般 <script> 而不是 type="module"，
+       避免某些環境（例如本機伺服器把 .js 回傳成錯的 MIME type 時）擋掉整個瀏覽器的模組載入機制 -->
+  <script defer src="js/config.js"></script>
+  <script defer src="js/shared/ui.js"></script>
+  <script defer src="js/shared/promptTemplates.js"></script>
+  <script defer src="js/api/claudeClient.js"></script>
+  <script defer src="js/modules/learning/learningController.js"></script>
+  <script defer src="js/app.js"></script>
 </body>
 </html>

@@ -1,13 +1,13 @@
-export function show(el) {
+function show(el) {
   el.classList.remove("hidden");
 }
 
-export function hide(el) {
+function hide(el) {
   el.classList.add("hidden");
 }
 
 let toastTimer = null;
-export function toast(message, { error = false } = {}) {
+function toast(message, { error = false } = {}) {
   const el = document.getElementById("toast");
   el.textContent = message;
   el.classList.toggle("toast--error", error);
@@ -16,7 +16,7 @@ export function toast(message, { error = false } = {}) {
   toastTimer = setTimeout(() => hide(el), 4000);
 }
 
-export function understandingLabel(level) {
+function understandingLabel(level) {
   switch (level) {
     case "clear":
       return { text: "理解清楚", cls: "badge--clear" };
@@ -29,7 +29,7 @@ export function understandingLabel(level) {
   }
 }
 
-export function escapeHtml(str) {
+function escapeHtml(str) {
   const div = document.createElement("div");
   div.textContent = str ?? "";
   return div.innerHTML;

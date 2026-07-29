@@ -1,11 +1,3 @@
-import { callClaudeStructured } from "../../api/claudeClient.js";
-import {
-  QUESTION_SYSTEM_PROMPT,
-  QUESTION_SCHEMA,
-  ANSWER_REVIEW_SYSTEM_PROMPT,
-  ANSWER_REVIEW_SCHEMA,
-} from "../../shared/promptTemplates.js";
-
 /**
  * In-memory session state for the current material.
  * Shape mirrors the future persisted record:
@@ -14,7 +6,7 @@ import {
  */
 let session = null;
 
-export function startSession(material) {
+function startSession(material) {
   session = {
     id: `s_${Date.now()}`,
     createdAt: new Date().toISOString(),
@@ -25,11 +17,11 @@ export function startSession(material) {
   return session;
 }
 
-export function getSession() {
+function getSession() {
   return session;
 }
 
-export async function generateQuestion() {
+async function generateQuestion() {
   if (!session) throw new Error("尚未開始練習。");
 
   const askedQuestions = session.qaTurns.map((t) => t.questionEn);
@@ -68,7 +60,7 @@ export async function generateQuestion() {
   return result;
 }
 
-export async function submitAnswer(userAnswer) {
+async function submitAnswer(userAnswer) {
   if (!session || session.qaTurns.length === 0) {
     throw new Error("目前沒有進行中的題目。");
   }

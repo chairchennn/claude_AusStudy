@@ -1,12 +1,3 @@
-import { getApiKey, getModel, setApiKey, setModel, hasApiKey } from "./config.js";
-import { show, hide, toast, understandingLabel, escapeHtml } from "./shared/ui.js";
-import {
-  startSession,
-  getSession,
-  generateQuestion,
-  submitAnswer,
-} from "./modules/learning/learningController.js";
-
 // ---- Element refs ----
 const els = {
   settingsBtn: document.getElementById("settingsBtn"),

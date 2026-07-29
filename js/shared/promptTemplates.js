@@ -1,4 +1,4 @@
-export const QUESTION_SYSTEM_PROMPT = `你是一位善用蘇格拉底式提問法（Socratic Questioning）的英文學習教練。
+const QUESTION_SYSTEM_PROMPT = `你是一位善用蘇格拉底式提問法（Socratic Questioning）的英文學習教練。
 你會收到一段使用者提供的學習素材（文章、影片重點、投影片內容等）。
 
 你的任務分兩部分：
@@ -21,7 +21,7 @@ export const QUESTION_SYSTEM_PROMPT = `你是一位善用蘇格拉底式提問�
 - 如果使用者提供了先前已經問過的題目列表，這次的題目必須是新的角度，不要重複。
 - 題目難度應符合素材的深度，避免過於空泛（例如避免「你覺得如何？"這種問題）。`;
 
-export const QUESTION_SCHEMA = {
+const QUESTION_SCHEMA = {
   type: "object",
   properties: {
     materialSummaryEn: {
@@ -42,7 +42,7 @@ export const QUESTION_SCHEMA = {
   additionalProperties: false,
 };
 
-export const ANSWER_REVIEW_SYSTEM_PROMPT = `你是一位嚴謹但鼓勵人的英文寫作教練，同時也在批改使用者的批判性思考回答。
+const ANSWER_REVIEW_SYSTEM_PROMPT = `你是一位嚴謹但鼓勵人的英文寫作教練，同時也在批改使用者的批判性思考回答。
 
 你會收到：
 1. 原始學習素材
@@ -63,7 +63,7 @@ export const ANSWER_REVIEW_SYSTEM_PROMPT = `你是一位嚴謹但鼓勵人的英
    - "confused"：回答顯示誤解了問題或素材的核心概念
    這個判斷是根據「內容與思考深度」，不是根據英文文法好壞。`;
 
-export const ANSWER_REVIEW_SCHEMA = {
+const ANSWER_REVIEW_SCHEMA = {
   type: "object",
   properties: {
     correctedAnswer: {

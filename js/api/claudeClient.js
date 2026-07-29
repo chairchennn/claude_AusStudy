@@ -1,5 +1,3 @@
-import { getApiKey, getModel } from "../config.js";
-
 const API_URL = "https://api.anthropic.com/v1/messages";
 const ANTHROPIC_VERSION = "2023-06-01";
 
@@ -7,7 +5,7 @@ const ANTHROPIC_VERSION = "2023-06-01";
  * Calls the Claude API and expects a JSON object back, constrained by `schema`.
  * Throws on missing key, HTTP error, refusal, or unparsable output.
  */
-export async function callClaudeStructured({ system, userContent, schema, maxTokens = 8000 }) {
+async function callClaudeStructured({ system, userContent, schema, maxTokens = 8000 }) {
   const apiKey = getApiKey();
   if (!apiKey) {
     throw new Error("尚未設定 API Key，請點右上角齒輪圖示設定。");

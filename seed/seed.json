@@ -1,0 +1,1322 @@
+{
+ "meta/settings": {
+  "semester": {
+   "name": "UQ 2026 Semester 2",
+   "start": "2026-07-27",
+   "breakStart": "2026-09-28",
+   "breakEnd": "2026-10-02",
+   "classesEnd": "2026-10-30",
+   "revisionStart": "2026-11-02",
+   "examStart": "2026-11-07",
+   "examEnd": "2026-11-21"
+  },
+  "minutes": {
+   "weekday": 120,
+   "weekend": 180
+  },
+  "english": "B1",
+  "showZh": true
+ },
+ "courses/CSSE7030": {
+  "code": "CSSE7030",
+  "name": "Introduction to Programming",
+  "nameZh": "程式設計入門",
+  "kind": "programming",
+  "color": "teal",
+  "order": 1,
+  "verified": false,
+  "note": "評量依過往課綱整理，請核對本學期 ECP",
+  "topics": [
+   "Python basics: types, expressions, variables",
+   "Functions and docstrings",
+   "Conditionals and loops",
+   "Strings, lists, tuples and dictionaries",
+   "File input and output",
+   "Testing and debugging",
+   "Classes and objects (OOP)",
+   "Inheritance",
+   "GUI programming and MVC (tkinter)"
+  ],
+  "assessments": [
+   {
+    "id": "a-csse-1",
+    "name": "Assignment 1",
+    "due": null,
+    "weight": 15,
+    "kind": "assignment",
+    "status": "done",
+    "note": "應該已繳交，請確認"
+   },
+   {
+    "id": "a-csse-2",
+    "name": "In-semester exam（期中考）",
+    "due": null,
+    "weight": 20,
+    "kind": "exam",
+    "status": "done",
+    "note": "UQ 期中考週為 9/5、9/11–13，請確認"
+   },
+   {
+    "id": "a-csse-3",
+    "name": "Assignment 2",
+    "due": null,
+    "weight": 25,
+    "kind": "assignment",
+    "status": "todo",
+    "note": "截止日請查 ECP 後填入"
+   },
+   {
+    "id": "a-csse-4",
+    "name": "Assignment 2 interview（面試，需通過）",
+    "due": null,
+    "weight": null,
+    "kind": "other",
+    "status": "todo",
+    "note": "Hurdle：pass/fail"
+   }
+  ],
+  "exam": {
+   "name": "期末考",
+   "date": null,
+   "weight": 40,
+   "window": "11/7–11/21 考試期間（時間表公布後填入日期）",
+   "note": "依過往課綱"
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z",
+  "updatedAt": "2026-10-01T00:00:00.000Z"
+ },
+ "courses/CYBR7001": {
+  "code": "CYBR7001",
+  "name": "Fundamentals of Cyber Security",
+  "nameZh": "資安基礎",
+  "kind": "theory",
+  "color": "plum",
+  "order": 2,
+  "verified": false,
+  "note": "100% 作業（至少一份小組作業），沒有期末考",
+  "topics": [
+   "Core concepts: CIA triad, threats, vulnerabilities, risk",
+   "Threat actors and their motives",
+   "Preventative, offensive and defensive cyber security",
+   "Cyber crime",
+   "Law, privacy and regulation in Australia",
+   "Governance, policy and national security",
+   "Human factors and social engineering"
+  ],
+  "assessments": [],
+  "exam": null,
+  "createdAt": "2026-10-01T00:00:00.000Z",
+  "updatedAt": "2026-10-01T00:00:00.000Z"
+ },
+ "courses/CYBR7002": {
+  "code": "CYBR7002",
+  "name": "Information Security Essentials",
+  "nameZh": "資訊安全要點",
+  "kind": "theory",
+  "color": "ochre",
+  "order": 3,
+  "verified": false,
+  "note": "評量依過往課綱整理，請核對本學期 ECP",
+  "topics": [
+   "Governance of information and ICT assets",
+   "Business impact analysis (confidentiality, integrity, availability)",
+   "Risk management and types of controls",
+   "Access control and authentication protocols",
+   "Biometrics for authentication",
+   "Applied cryptography",
+   "Network and wireless network security",
+   "Physical security",
+   "HR security and securing the human",
+   "Phishing and social engineering",
+   "Payment card industry (PCI DSS) security",
+   "Cloud computing security",
+   "Industrial control systems",
+   "Cooperative and automated vehicles"
+  ],
+  "assessments": [
+   {
+    "id": "a-cybr2-1",
+    "name": "Practical quizzes（實作課小考）",
+    "due": null,
+    "weight": null,
+    "kind": "quiz",
+    "status": "todo",
+    "note": "在 practical 課堂中作答"
+   },
+   {
+    "id": "a-cybr2-2",
+    "name": "Mid-semester in-class test（期中課堂測驗）",
+    "due": null,
+    "weight": null,
+    "kind": "exam",
+    "status": "todo",
+    "note": "可能已舉行，請確認"
+   },
+   {
+    "id": "a-cybr2-3",
+    "name": "Assignment",
+    "due": null,
+    "weight": null,
+    "kind": "assignment",
+    "status": "todo",
+    "note": "截止日請查 ECP 後填入"
+   }
+  ],
+  "exam": {
+   "name": "期末考",
+   "date": null,
+   "weight": null,
+   "window": "11/7–11/21 考試期間（時間表公布後填入日期）",
+   "note": "依過往課綱"
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z",
+  "updatedAt": "2026-10-01T00:00:00.000Z"
+ },
+ "courses/MATH7861": {
+  "code": "MATH7861",
+  "name": "Discrete Mathematics",
+  "nameZh": "離散數學",
+  "kind": "math",
+  "color": "moss",
+  "order": 4,
+  "verified": false,
+  "note": "評量依過往課綱整理，請核對本學期 ECP",
+  "topics": [
+   "Propositional and predicate logic",
+   "Valid arguments and proof techniques",
+   "Elementary set theory",
+   "Relations and functions",
+   "Induction and recursive definitions",
+   "Counting: pigeonhole principle, inclusion–exclusion",
+   "Introductory probability",
+   "Elementary graph theory",
+   "Binary operations, semigroups and groups",
+   "Fields and applications of finite fields",
+   "Elementary number theory"
+  ],
+  "assessments": [
+   {
+    "id": "a-math-1",
+    "name": "Applied class exercises（每週實作課練習）",
+    "due": null,
+    "weight": null,
+    "kind": "quiz",
+    "status": "doing",
+    "note": "過往為 30%（2025 S2）；MATH1061 2026 S2 為 40%，取 12 次中最好 8 次"
+   },
+   {
+    "id": "a-math-2",
+    "name": "Assignment 1",
+    "due": null,
+    "weight": 5,
+    "kind": "assignment",
+    "status": "done",
+    "note": "2025 S2 為 9 月初截止，請確認"
+   },
+   {
+    "id": "a-math-3",
+    "name": "Assignment 2",
+    "due": null,
+    "weight": 5,
+    "kind": "assignment",
+    "status": "todo",
+    "note": "2025 S2 為 10 月下旬截止，請查 ECP"
+   }
+  ],
+  "exam": {
+   "name": "期末考",
+   "date": null,
+   "weight": 60,
+   "window": "11/7–11/21 考試期間（時間表公布後填入日期）",
+   "note": "Hurdle（需達門檻）、紙筆考試（依過往課綱）"
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z",
+  "updatedAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-01": {
+  "courseCode": "CSSE7030",
+  "kind": "code",
+  "front": "What does this print?",
+  "back": "[2, 5, 8]\nrange(start, stop, step)：從 2 開始每次 +3，不包含 10。",
+  "extra": {
+   "code": "print(list(range(2, 10, 3)))"
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-02": {
+  "courseCode": "CSSE7030",
+  "kind": "concept",
+  "front": "What is the difference between a list and a tuple in Python?",
+  "back": "A list is mutable (it can be changed); a tuple is immutable.\nlist 可以改、tuple 不能改；tuple 可以當 dict 的 key。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-03": {
+  "courseCode": "CSSE7030",
+  "kind": "concept",
+  "front": "What does a function return if it has no return statement?",
+  "back": "None.\n沒有 return 的函式會回傳 None。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-04": {
+  "courseCode": "CSSE7030",
+  "kind": "code",
+  "front": "What does this print?",
+  "back": "3 1 3.5\n// 整數除法、% 餘數、/ 一般除法（結果是 float）。",
+  "extra": {
+   "code": "print(7 // 2, 7 % 2, 7 / 2)"
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-05": {
+  "courseCode": "CSSE7030",
+  "kind": "code",
+  "front": "What does this print?",
+  "back": "yth n\n[1:4] 取索引 1、2、3（不含 4）；-1 是最後一個字元。",
+  "extra": {
+   "code": "s = \"python\"\nprint(s[1:4], s[-1])"
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-06": {
+  "courseCode": "CSSE7030",
+  "kind": "concept",
+  "front": "What does d.get(key, default) do for a dictionary d?",
+  "back": "It returns d[key] if the key exists, otherwise default, without raising KeyError.\n找不到 key 時回傳預設值，不會報錯。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-07": {
+  "courseCode": "CSSE7030",
+  "kind": "code",
+  "front": "What does this print?",
+  "back": "None\nlist.sort() 原地排序並回傳 None；要新的排序 list 用 sorted(nums)。",
+  "extra": {
+   "code": "nums = [3, 1, 2]\nresult = nums.sort()\nprint(result)"
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-08": {
+  "courseCode": "CSSE7030",
+  "kind": "concept",
+  "front": "What is the difference between == and is?",
+  "back": "== compares values; is checks whether two names refer to the same object.\n== 比較值，is 比較是不是同一個物件。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-09": {
+  "courseCode": "CSSE7030",
+  "kind": "concept",
+  "front": "In a class, what is self?",
+  "back": "The first parameter of an instance method; it refers to the object the method was called on.\nself 代表呼叫這個方法的物件本身。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-10": {
+  "courseCode": "CSSE7030",
+  "kind": "concept",
+  "front": "What does __init__ do?",
+  "back": "It initialises a new object: it runs when the object is created and sets its attributes.\n建立物件時自動執行，用來設定屬性的初始值。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-11": {
+  "courseCode": "CSSE7030",
+  "kind": "concept",
+  "front": "What is MVC in GUI programming?",
+  "back": "Model–View–Controller: the model holds data and logic, the view displays it, the controller handles user input and updates both.\nModel 管資料、View 管畫面、Controller 處理使用者操作。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-csse7030-12": {
+  "courseCode": "CSSE7030",
+  "kind": "code",
+  "front": "What does this print?",
+  "back": "[1, 2, 3]\ny = x 沒有複製 list，x 和 y 指向同一個物件（aliasing）。",
+  "extra": {
+   "code": "x = [1, 2]\ny = x\ny.append(3)\nprint(x)"
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-01": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "What is the contrapositive of p → q? Is it equivalent to p → q?",
+  "back": "¬q → ¬p. Yes, it is logically equivalent.\n逆否命題和原命題等價；逆命題 q → p 則不一定。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-02": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "Negate ∀x P(x).",
+  "back": "∃x ¬P(x).\n「所有 x 都成立」的否定是「存在一個 x 不成立」。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-03": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "What is a tautology?",
+  "back": "A compound proposition that is true for every truth assignment, e.g. p ∨ ¬p.\n恆真式：不論真假值怎麼給都為真。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-04": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "What are the steps of a proof by mathematical induction?",
+  "back": "1) Base case: prove P(n₀). 2) Inductive step: assume P(k) and prove P(k + 1). Then P(n) holds for all n ≥ n₀.\n基礎步驟＋歸納步驟（假設 P(k) 成立，證明 P(k+1)）。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-05": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "State the pigeonhole principle.",
+  "back": "If n + 1 or more objects are placed into n boxes, some box contains at least two objects.\n鴿籠原理。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-06": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "Inclusion–exclusion for two sets: |A ∪ B| = ?",
+  "back": "|A| + |B| − |A ∩ B|\n排容原理：交集被算了兩次，要減掉一次。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-07": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "How many r-combinations of n objects are there, C(n, r)?",
+  "back": "n! / (r! (n − r)!)\n不考慮順序的選法數。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-08": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "Which three properties make a relation an equivalence relation?",
+  "back": "Reflexive, symmetric and transitive.\n自反、對稱、遞移。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-09": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "What does a ≡ b (mod n) mean?",
+  "back": "n divides a − b; equivalently, a and b leave the same remainder when divided by n.\na 和 b 除以 n 的餘數相同。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-10": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "State the handshaking lemma.",
+  "back": "In any graph, the sum of the vertex degrees equals 2|E|. So the number of odd-degree vertices is even.\n握手定理。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-11": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "When does a connected graph have an Euler circuit?",
+  "back": "When every vertex has even degree.\n連通圖，且每個頂點的度數都是偶數。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-12": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "Define injective, surjective and bijective functions.",
+  "back": "Injective: different inputs give different outputs. Surjective: every element of the codomain is an output. Bijective: both.\n一對一、映成、一一對應。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-math7861-13": {
+  "courseCode": "MATH7861",
+  "kind": "concept",
+  "front": "What are the group axioms?",
+  "back": "A set with a binary operation that is closed and associative, has an identity element, and in which every element has an inverse.\n封閉、結合律、單位元素、反元素。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-01": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "CIA triad",
+  "back": "機密性、完整性、可用性\nConfidentiality, integrity and availability: the three core goals of information security.",
+  "extra": {
+   "zh": "機密性、完整性、可用性",
+   "def": "Confidentiality, integrity and availability: the three core goals of information security.",
+   "example": "A ransomware attack mainly harms availability."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-02": {
+  "courseCode": "CYBR7001",
+  "kind": "concept",
+  "front": "What is the difference between a threat, a vulnerability and a risk?",
+  "back": "Threat: something that could cause harm. Vulnerability: a weakness that could be exploited. Risk: the likelihood and impact of a threat exploiting a vulnerability.\n威脅、弱點、風險；風險 ≈ 可能性 × 影響。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-03": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "Threat actor",
+  "back": "威脅行為者\nA person or group that carries out an attack, e.g. nation-states, cybercriminals, hacktivists, insiders.",
+  "extra": {
+   "zh": "威脅行為者",
+   "def": "A person or group that carries out an attack, e.g. nation-states, cybercriminals, hacktivists, insiders.",
+   "example": "A disgruntled employee can be an insider threat actor."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-04": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "Defence in depth",
+  "back": "縱深防禦\nSeveral layers of security controls, so if one fails the others still protect the asset.",
+  "extra": {
+   "zh": "縱深防禦",
+   "def": "Several layers of security controls, so if one fails the others still protect the asset.",
+   "example": "A firewall, MFA and offline backups together are defence in depth."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-05": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "Social engineering",
+  "back": "社交工程\nManipulating people into giving information or access instead of attacking technology.",
+  "extra": {
+   "zh": "社交工程",
+   "def": "Manipulating people into giving information or access instead of attacking technology.",
+   "example": "A fake IT support call asking for your password."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-06": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "Principle of least privilege",
+  "back": "最小權限原則\nGive users and programs only the access they need for their job.",
+  "extra": {
+   "zh": "最小權限原則",
+   "def": "Give users and programs only the access they need for their job.",
+   "example": "An intern should not have administrator rights."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-07": {
+  "courseCode": "CYBR7001",
+  "kind": "concept",
+  "front": "What are the ASD Essential Eight?",
+  "back": "Application control, patch applications, configure Microsoft Office macro settings, user application hardening, restrict administrative privileges, patch operating systems, multi-factor authentication, regular backups.\n澳洲訊號局（ASD）建議的八項基本防護策略。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-08": {
+  "courseCode": "CYBR7001",
+  "kind": "concept",
+  "front": "What is Australia's Notifiable Data Breaches (NDB) scheme?",
+  "back": "Under the Privacy Act 1988, covered organisations must notify affected individuals and the OAIC when a data breach is likely to cause serious harm.\n可能造成嚴重傷害的資料外洩，必須通知當事人和 OAIC。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-09": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "Zero-day vulnerability",
+  "back": "零時差漏洞\nA flaw that the vendor does not know about yet, so no patch exists.",
+  "extra": {
+   "zh": "零時差漏洞",
+   "def": "A flaw that the vendor does not know about yet, so no patch exists.",
+   "example": "Attackers used the zero-day before a fix was released."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-10": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "Ransomware",
+  "back": "勒索軟體\nMalware that encrypts or steals data and demands payment.",
+  "extra": {
+   "zh": "勒索軟體",
+   "def": "Malware that encrypts or steals data and demands payment.",
+   "example": "Ransomware can stop a hospital from opening patient records."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-11": {
+  "courseCode": "CYBR7001",
+  "kind": "concept",
+  "front": "Why is attributing a cyber attack difficult?",
+  "back": "Attackers use proxies, compromised machines and false flags, and evidence crosses national borders, so it is hard to prove who is responsible.\n攻擊者會用跳板、偽旗和跨國設施，很難證明是誰做的。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7001-12": {
+  "courseCode": "CYBR7001",
+  "kind": "term",
+  "front": "Attack surface",
+  "back": "攻擊面\nAll the points where an attacker could try to enter a system or take data out.",
+  "extra": {
+   "zh": "攻擊面",
+   "def": "All the points where an attacker could try to enter a system or take data out.",
+   "example": "Every new internet-facing service increases the attack surface."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-01": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "What are the three types of authentication factor?",
+  "back": "Something you know (password), something you have (phone, token), something you are (biometrics). MFA combines two or more different types.\n知道的、擁有的、本身的特徵；MFA 要組合不同類型。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-02": {
+  "courseCode": "CYBR7002",
+  "kind": "term",
+  "front": "FAR and FRR (biometrics)",
+  "back": "誤接受率／誤拒絕率\nFAR: impostors wrongly accepted. FRR: genuine users wrongly rejected. Lowering one usually raises the other; the EER is where they are equal.",
+  "extra": {
+   "zh": "誤接受率／誤拒絕率",
+   "def": "FAR: impostors wrongly accepted. FRR: genuine users wrongly rejected. The EER is where they are equal.",
+   "example": "A very strict fingerprint reader has a low FAR but a higher FRR."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-03": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "Symmetric vs asymmetric encryption?",
+  "back": "Symmetric uses one shared secret key (fast, e.g. AES). Asymmetric uses a public/private key pair (slower, e.g. RSA), which solves key distribution and enables digital signatures.\n對稱：同一把鑰匙；非對稱：公鑰與私鑰。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-04": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "Which properties should a cryptographic hash function have?",
+  "back": "Pre-image resistance (one-way), second pre-image resistance and collision resistance; a small input change gives a very different output.\n單向、抗第二原像、抗碰撞。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-05": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "How does a digital signature work?",
+  "back": "The sender signs a hash of the message with their private key; anyone can verify it with the sender's public key. It gives integrity, authentication and non-repudiation.\n用私鑰簽、公鑰驗；提供完整性、身分驗證、不可否認。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-06": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "Identification vs authentication vs authorisation?",
+  "back": "Identification: claiming who you are. Authentication: proving it. Authorisation: what you are allowed to do.\n識別、驗證、授權。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-07": {
+  "courseCode": "CYBR7002",
+  "kind": "term",
+  "front": "Phishing, spear phishing, whaling",
+  "back": "網路釣魚／魚叉式釣魚／捕鯨\nPhishing targets many people; spear phishing targets a specific person or group; whaling targets senior executives.",
+  "extra": {
+   "zh": "網路釣魚／魚叉式釣魚／捕鯨",
+   "def": "Phishing targets many people; spear phishing targets specific people; whaling targets senior executives.",
+   "example": "An email pretending to be the CEO asks finance to pay an invoice."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-08": {
+  "courseCode": "CYBR7002",
+  "kind": "term",
+  "front": "PCI DSS",
+  "back": "支付卡產業資料安全標準\nSecurity requirements for organisations that store, process or transmit cardholder data.",
+  "extra": {
+   "zh": "支付卡產業資料安全標準",
+   "def": "Security requirements for organisations that store, process or transmit cardholder data.",
+   "example": "An online shop must protect stored card numbers under PCI DSS."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-09": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "What is the cloud shared responsibility model?",
+  "back": "The provider secures the cloud infrastructure; the customer secures what they put in it (data, identities, configuration). The split depends on IaaS, PaaS or SaaS.\n雲端業者負責雲本身，客戶負責雲裡的資料與設定。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-10": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "IDS vs IPS?",
+  "back": "An IDS detects suspicious traffic and alerts; an IPS sits inline and can block it automatically.\nIDS 偵測並告警，IPS 可以直接阻擋。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-03",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-11": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "Why is availability usually the top priority in industrial control systems?",
+  "back": "ICS run physical processes such as power and water; downtime can endanger safety and is very costly, and the systems are old and hard to patch.\n工控系統停機會影響安全與民生，所以可用性優先。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-04",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-12": {
+  "courseCode": "CYBR7002",
+  "kind": "term",
+  "front": "Separation of duties",
+  "back": "職責分離\nSplitting a critical task between people so no single person can misuse it.",
+  "extra": {
+   "zh": "職責分離",
+   "def": "Splitting a critical task between people so no single person can misuse it.",
+   "example": "One staff member creates a payment and another approves it."
+  },
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-01",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "cards/starter-cybr7002-13": {
+  "courseCode": "CYBR7002",
+  "kind": "concept",
+  "front": "What is WPA3's main improvement over WPA2-Personal?",
+  "back": "WPA3 replaces the pre-shared-key handshake with SAE, which resists offline password-guessing and provides forward secrecy.\nWPA3 改用 SAE，能抵抗離線字典攻擊。",
+  "extra": {},
+  "source": {
+   "type": "starter"
+  },
+  "srs": {
+   "due": "2026-10-02",
+   "interval": 0,
+   "ease": 2.5,
+   "reps": 0,
+   "lapses": 0,
+   "last": null
+  },
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "tasks/starter-t1": {
+  "date": "2026-10-01",
+  "courseCode": null,
+  "title": "核對四科的評量日期：把 ECP 的 Assessment 表貼到「計畫 → 整理課程公告」",
+  "minutes": 20,
+  "kind": "other",
+  "priority": 1,
+  "why": "倒數、計畫和衝刺建議都靠這些日期；目前是依過往課綱整理的。",
+  "done": false,
+  "order": 0,
+  "source": "starter",
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "tasks/starter-t2": {
+  "date": "2026-10-01",
+  "courseCode": "MATH7861",
+  "title": "MATH7861：上傳最近一週的講義，看導讀，回答 5 題書僮問答",
+  "minutes": 45,
+  "kind": "study",
+  "priority": 2,
+  "why": "期末考過往占 60% 且有門檻，越早開始越好。",
+  "done": false,
+  "order": 1,
+  "source": "starter",
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "tasks/starter-t3": {
+  "date": "2026-10-01",
+  "courseCode": null,
+  "title": "複習今日閃卡（書僮預設卡）",
+  "minutes": 15,
+  "kind": "review",
+  "priority": 2,
+  "why": "先熟悉閃卡的用法；之後每天 15 分鐘。",
+  "done": false,
+  "order": 2,
+  "source": "starter",
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "tasks/starter-t4": {
+  "date": "2026-10-02",
+  "courseCode": "CYBR7002",
+  "title": "CYBR7002：上傳一份講義，用「費曼講解」以英文講一個觀念",
+  "minutes": 40,
+  "kind": "english",
+  "priority": 2,
+  "why": "理論課最需要把觀念講出來，同時練英文。",
+  "done": false,
+  "order": 3,
+  "source": "starter",
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "tasks/starter-t5": {
+  "date": "2026-10-02",
+  "courseCode": "CSSE7030",
+  "title": "CSSE7030：出 5 題程式追蹤題（練習 → 出題）",
+  "minutes": 30,
+  "kind": "practice",
+  "priority": 2,
+  "why": "期末考是紙筆作答，追蹤程式是最常考的題型。",
+  "done": false,
+  "order": 4,
+  "source": "starter",
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ },
+ "tasks/starter-t6": {
+  "date": "2026-10-02",
+  "courseCode": null,
+  "title": "請書僮排接下來兩週的計畫（寫上打工和作業時間）",
+  "minutes": 10,
+  "kind": "other",
+  "priority": 2,
+  "why": "有了作業日期和你的時間，計畫才會準。",
+  "done": false,
+  "order": 5,
+  "source": "starter",
+  "createdAt": "2026-10-01T00:00:00.000Z"
+ }
+}

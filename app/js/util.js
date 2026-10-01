@@ -290,7 +290,8 @@ function semesterPhase(date, sem) {
     return { phase: 'revision', label: '複習週 · Revision period', short: '複習週' };
   if (U.isYmd(sem.classesEnd) && date > sem.classesEnd) return { phase: 'gap', label: '課程已結束', short: '停課' };
   const w = weekAt(date);
-  return { phase: 'teaching', week: w, label: `第 ${w} 週`, short: `W${w}`, rawWeek };
+  const holiday = (sem.holidays || []).includes(date);
+  return { phase: 'teaching', week: w, label: `第 ${w} 週${holiday ? ' · 公眾假期' : ''}`, short: `W${w}`, rawWeek, holiday };
 }
 
 /** "考試期 11/7–11/21" for exams whose exact date isn't published yet. */

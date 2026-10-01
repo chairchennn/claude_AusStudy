@@ -1,0 +1,344 @@
+[
+ {
+  "id": "class-prev-CSSE7030-W10",
+  "data": {
+   "date": "2026-10-05",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：預習 W10（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 10,
+   "why": "週二 12:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-CSSE7030-W10",
+   "done": false,
+   "order": 0,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prev-MATH7861-W10",
+  "data": {
+   "date": "2026-10-05",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：預習 W10（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 10,
+   "why": "週二 14:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-MATH7861-W10",
+   "done": false,
+   "order": 1,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-MATH7861-2026-10-07",
+  "data": {
+   "date": "2026-10-06",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 10,
+   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "key": "prep-MATH7861-2026-10-07",
+   "done": false,
+   "order": 2,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-CSSE7030-2026-10-08",
+  "data": {
+   "date": "2026-10-07",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 10,
+   "why": "課堂上要動手寫程式，先複習講課內容、看過題目，當場比較不會卡住。",
+   "key": "prep-CSSE7030-2026-10-08",
+   "done": false,
+   "order": 3,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prev-MATH7861-W11",
+  "data": {
+   "date": "2026-10-11",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：預習 W11（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 11,
+   "why": "週一 10:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-MATH7861-W11",
+   "done": false,
+   "order": 4,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prev-CSSE7030-W11",
+  "data": {
+   "date": "2026-10-12",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：預習 W11（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 11,
+   "why": "週二 12:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-CSSE7030-W11",
+   "done": false,
+   "order": 5,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-rec-CYBR7002-2026-10-12-10:00",
+  "data": {
+   "date": "2026-10-12",
+   "courseCode": "CYBR7002",
+   "title": "CYBR7002：看 W11 講課錄影",
+   "minutes": 120,
+   "kind": "study",
+   "priority": 2,
+   "week": 11,
+   "why": "這堂和其他課衝堂，用錄影補上；兩天內看完，邊看邊記下不懂的地方問書僮。",
+   "key": "rec-CYBR7002-2026-10-12-10:00",
+   "done": false,
+   "order": 6,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-MATH7861-2026-10-14",
+  "data": {
+   "date": "2026-10-13",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 11,
+   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "key": "prep-MATH7861-2026-10-14",
+   "done": false,
+   "order": 7,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-CSSE7030-2026-10-15",
+  "data": {
+   "date": "2026-10-14",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 11,
+   "why": "課堂上要動手寫程式，先複習講課內容、看過題目，當場比較不會卡住。",
+   "key": "prep-CSSE7030-2026-10-15",
+   "done": false,
+   "order": 8,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prev-MATH7861-W12",
+  "data": {
+   "date": "2026-10-18",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：預習 W12（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 12,
+   "why": "週一 10:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-MATH7861-W12",
+   "done": false,
+   "order": 9,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prev-CSSE7030-W12",
+  "data": {
+   "date": "2026-10-19",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：預習 W12（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 12,
+   "why": "週二 12:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-CSSE7030-W12",
+   "done": false,
+   "order": 10,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-rec-CYBR7002-2026-10-19-10:00",
+  "data": {
+   "date": "2026-10-19",
+   "courseCode": "CYBR7002",
+   "title": "CYBR7002：看 W12 講課錄影",
+   "minutes": 120,
+   "kind": "study",
+   "priority": 2,
+   "week": 12,
+   "why": "這堂和其他課衝堂，用錄影補上；兩天內看完，邊看邊記下不懂的地方問書僮。",
+   "key": "rec-CYBR7002-2026-10-19-10:00",
+   "done": false,
+   "order": 11,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-MATH7861-2026-10-21",
+  "data": {
+   "date": "2026-10-20",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 12,
+   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "key": "prep-MATH7861-2026-10-21",
+   "done": false,
+   "order": 12,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-CSSE7030-2026-10-22",
+  "data": {
+   "date": "2026-10-21",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 12,
+   "why": "課堂上要動手寫程式，先複習講課內容、看過題目，當場比較不會卡住。",
+   "key": "prep-CSSE7030-2026-10-22",
+   "done": false,
+   "order": 13,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prev-MATH7861-W13",
+  "data": {
+   "date": "2026-10-25",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：預習 W13（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 13,
+   "why": "週一 10:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-MATH7861-W13",
+   "done": false,
+   "order": 14,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prev-CSSE7030-W13",
+  "data": {
+   "date": "2026-10-26",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：預習 W13（預習導讀＋暖身題）",
+   "minutes": 30,
+   "kind": "study",
+   "priority": 2,
+   "week": 13,
+   "why": "週二 12:00 上這週第一堂講課。先知道要學什麼、哪些舊觀念要先複習，上課比較跟得上。",
+   "key": "prev-CSSE7030-W13",
+   "done": false,
+   "order": 15,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-rec-CYBR7002-2026-10-26-10:00",
+  "data": {
+   "date": "2026-10-26",
+   "courseCode": "CYBR7002",
+   "title": "CYBR7002：看 W13 講課錄影",
+   "minutes": 120,
+   "kind": "study",
+   "priority": 2,
+   "week": 13,
+   "why": "這堂和其他課衝堂，用錄影補上；兩天內看完，邊看邊記下不懂的地方問書僮。",
+   "key": "rec-CYBR7002-2026-10-26-10:00",
+   "done": false,
+   "order": 16,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-MATH7861-2026-10-28",
+  "data": {
+   "date": "2026-10-27",
+   "courseCode": "MATH7861",
+   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 13,
+   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "key": "prep-MATH7861-2026-10-28",
+   "done": false,
+   "order": 17,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ },
+ {
+  "id": "class-prep-CSSE7030-2026-10-29",
+  "data": {
+   "date": "2026-10-28",
+   "courseCode": "CSSE7030",
+   "title": "CSSE7030：Applied class 前，複習這週講課、先看題目",
+   "minutes": 30,
+   "kind": "practice",
+   "priority": 2,
+   "week": 13,
+   "why": "課堂上要動手寫程式，先複習講課內容、看過題目，當場比較不會卡住。",
+   "key": "prep-CSSE7030-2026-10-29",
+   "done": false,
+   "order": 18,
+   "source": "class",
+   "createdAt": "2026-10-01T00:00:00.000Z"
+  }
+ }
+]

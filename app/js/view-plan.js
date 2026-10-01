@@ -54,6 +54,7 @@ function PlanView({ params }) {
     </header>
 
     <${Timeline} />
+    <${TimetableSection} />
 
     ${panel === 'ai' ? html`<${AIPlanner} onClose=${() => setPanel(null)} />` : null}
     ${panel === 'parse' ? html`<${InfoParser} onClose=${() => setPanel(null)} />` : null}
@@ -138,8 +139,8 @@ function TaskRow({ task: t, siblings, compact }) {
     ${!compact
       ? html`<div class="task__actions">
           ${siblings && siblings.length > 1
-            ? html`<button type="button" class="iconbtn" aria-label="上移" onClick=${() => move(-1)}><${Icon} name="up" size=${16} /></button>
-                <button type="button" class="iconbtn" aria-label="下移" onClick=${() => move(1)}><${Icon} name="down" size=${16} /></button>`
+            ? html`<button type="button" class="iconbtn mv" aria-label="上移" onClick=${() => move(-1)}><${Icon} name="up" size=${16} /></button>
+                <button type="button" class="iconbtn mv" aria-label="下移" onClick=${() => move(1)}><${Icon} name="down" size=${16} /></button>`
             : null}
           <button type="button" class="iconbtn" aria-label="編輯" onClick=${() => setEditing(true)}><${Icon} name="edit" size=${16} /></button>
           <${ConfirmBtn} label="" confirm="刪除" kind="ghost" onConfirm=${() => Store.remove('tasks', t.id)} />
@@ -246,6 +247,117 @@ function DeadlineList() {
   ${s.courses.some((c) => c.verified === false) ? html`<p class="small muted">部分日期依過往課綱整理，標記「待核對」的請對照本學期 ECP。</p>` : null}`;
 }
 
+async function addClassTasks() {
+  const s = Store.state;
+  const sem = s.settings.semester;
+  const from = U.today();
+  const to = U.isYmd(sem.classesEnd) ? sem.classesEnd : U.addDays(from, 28);
+  const keys = s.tasks.map((t) => t.key).filter(Boolean);
+  const list = buildClassTasks({ timetable: s.timetable, courses: Store.courses(), sem, from, to, existingKeys: keys });
+  let k = 0;
+  for (const t of list) await Store.set('tasks', U.uid('t'), { ...t, done: false, order: k++, source: 'class', createdAt: U.nowIso() });
+  return list.length;
+}
+
+function TimetableSection() {
+  const s = useStore();
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const tt = s.timetable;
+  const sem = s.settings.semester;
+  const today = U.today();
+  const todayIso = isoDay(today);
+  const days = [1, 2, 3, 4, 5, ...(tt.classes.some((c) => Number(c.day) >= 6) ? [6, 7] : [])];
+  const previewCourses = Store.courses().filter((c) => c.preview).map((c) => c.code);
+  const gen = async () => {
+    setBusy(true);
+    try {
+      const n = await addClassTasks();
+      toast(n ? `加入 ${n} 項預習、課前準備和看錄影的任務` : '這些任務都已經在清單裡了', n ? 'ok' : 'info');
+    } finally {
+      setBusy(false);
+    }
+  };
+  if (editing) return html`<${TimetableEditor} onDone=${() => setEditing(false)} />`;
+  return html`<${Section} title="每週課表"
+    sub=${previewCourses.length ? `${previewCourses.join('、')} 會在講課前一天排預習` : '在課程頁的「預習」分頁可以設定哪幾門課要預習'}
+    aside=${html`<div class="row wrap">
+      ${tt.classes.length ? html`<${Btn} kind="ghost" size="sm" icon="spark" disabled=${busy} onClick=${gen}>產生預習與課前任務</${Btn}>` : null}
+      <${Btn} kind="ghost" size="sm" icon="edit" onClick=${() => setEditing(true)}>${tt.classes.length ? '編輯' : '輸入課表'}</${Btn}>
+    </div>`}>
+    ${tt.classes.length
+      ? html`<div class="tt" style=${{ '--tt-cols': days.length }}>
+          ${days.map(
+            (d) => html`<div key=${d} class=${U.cls('tt__day', d === todayIso && isClassDay(today, sem) && 'is-today')}>
+              <div class="tt__name">${DAY_NAMES[d]}</div>
+              ${tt.classes
+                .filter((c) => Number(c.day) === d)
+                .sort((a, b) => minutesOf(a.start) - minutesOf(b.start))
+                .map(
+                  (c) => html`<div key=${c.id || c.courseCode + c.start} class=${'tt__cls c-' + courseColor(c.courseCode)}>
+                    <span class="tt__time">${c.start}–${c.end}</span>
+                    <span class="tt__course">${c.courseCode}</span>
+                    <span class="tt__type">${CLASS_TYPES[c.type] || c.type}${c.mode === 'recording' ? ' · 看錄影' : ''}</span>
+                    ${c.location ? html`<span class="tt__loc">${c.location}</span>` : null}
+                  </div>`
+                )}
+            </div>`
+          )}
+        </div>`
+      : html`<${Empty} icon="plan" title="還沒有課表"
+          action=${html`<${Btn} kind="primary" size="sm" icon="plus" onClick=${() => setEditing(true)}>輸入課表</${Btn}>`}>
+          有了課表，書僮會在講課前一天排預習、在 applied class 前排複習，衝堂的課會提醒你看錄影。
+        </${Empty}>`}
+  </${Section}>`;
+}
+
+function TimetableEditor({ onDone }) {
+  const s = useStore();
+  const [rows, setRows] = useState(() => (s.timetable.classes || []).map((c) => ({ ...c })));
+  const courses = Store.courses();
+  const set = (i, patch) => setRows(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const add = () =>
+    setRows([...rows, { id: U.uid('c'), courseCode: courses[0] ? courses[0].code : '', type: 'lecture', day: 1, start: '09:00', end: '10:00', location: '', mode: 'in-person' }]);
+  const save = async () => {
+    const bad = rows.find((r) => !r.courseCode || minutesOf(r.end) <= minutesOf(r.start));
+    if (bad) return toast('每一堂都要選課程，而且結束時間要晚於開始時間。', 'warn');
+    await Store.set('meta', 'timetable', { classes: rows.map((r) => ({ ...r, day: Number(r.day) })), updatedAt: U.nowIso() });
+    toast('已儲存課表', 'ok');
+    onDone();
+  };
+  return html`<section class="panel stack">
+    <div class="row between"><h3 class="panel__title">編輯課表</h3><${Btn} kind="ghost" size="sm" icon="x" onClick=${onDone}>取消</${Btn}></div>
+    <div class="table-wrap">
+      <table class="tt-edit">
+        <thead><tr><th>課程</th><th>類型</th><th>星期</th><th>開始</th><th>結束</th><th>地點</th><th>上課方式</th><th></th></tr></thead>
+        <tbody>
+          ${rows.map(
+            (r, i) => html`<tr key=${r.id || i}>
+              <td data-label="課程"><select id=${'tt-c-' + i} aria-label="課程" value=${r.courseCode} onChange=${(e) => set(i, { courseCode: e.target.value })}>
+                ${courses.map((c) => html`<option value=${c.code}>${c.code}</option>`)}</select></td>
+              <td data-label="類型"><select id=${'tt-t-' + i} aria-label="類型" value=${r.type} onChange=${(e) => set(i, { type: e.target.value })}>
+                ${Object.entries(CLASS_TYPES).map(([k, v]) => html`<option value=${k}>${v}</option>`)}</select></td>
+              <td data-label="星期"><select id=${'tt-d-' + i} aria-label="星期" value=${r.day} onChange=${(e) => set(i, { day: Number(e.target.value) })}>
+                ${[1, 2, 3, 4, 5, 6, 7].map((d) => html`<option value=${d}>${DAY_NAMES[d]}</option>`)}</select></td>
+              <td data-label="開始"><input id=${'tt-s-' + i} aria-label="開始" type="time" value=${r.start} onInput=${(e) => set(i, { start: e.target.value })} /></td>
+              <td data-label="結束"><input id=${'tt-e-' + i} aria-label="結束" type="time" value=${r.end} onInput=${(e) => set(i, { end: e.target.value })} /></td>
+              <td data-label="地點"><input id=${'tt-l-' + i} aria-label="地點" value=${r.location || ''} onInput=${(e) => set(i, { location: e.target.value })} placeholder="03-309" /></td>
+              <td data-label="上課方式"><select id=${'tt-m-' + i} aria-label="上課方式" value=${r.mode || 'in-person'} onChange=${(e) => set(i, { mode: e.target.value })}>
+                <option value="in-person">現場</option><option value="recording">看錄影（衝堂）</option></select></td>
+              <td><button type="button" class="iconbtn" aria-label="刪除這堂課" onClick=${() => setRows(rows.filter((_, j) => j !== i))}><${Icon} name="trash" size=${16} /></button></td>
+            </tr>`
+          )}
+        </tbody>
+      </table>
+    </div>
+    <div class="row wrap">
+      <${Btn} kind="ghost" icon="plus" onClick=${add}>新增一堂課</${Btn}>
+      <span class="spacer"></span>
+      <${Btn} kind="primary" icon="check" onClick=${save}>儲存課表</${Btn}>
+    </div>
+  </section>`;
+}
+
 function AIPlanner({ onClose }) {
   const s = useStore();
   const rt = useRuntime();
@@ -334,6 +446,7 @@ function InfoParser({ onClose }) {
   const [res, setRes] = useState(null);
   const [pickA, setPickA] = useState({});
   const [pickT, setPickT] = useState({});
+  const [pickS, setPickS] = useState({});
 
   const analyze = () =>
     ai.run(async ({ signal, onProgress }) => {
@@ -342,6 +455,7 @@ function InfoParser({ onClose }) {
       setRes(r);
       setPickA(Object.fromEntries(r.assessments.map((a, i) => [i, !!a.courseCode])));
       setPickT(Object.fromEntries(r.tasks.map((_, i) => [i, true])));
+      setPickS(Object.fromEntries(r.schedule.map((_, i) => [i, true])));
     });
 
   const apply = async () => {
@@ -373,6 +487,17 @@ function InfoParser({ onClose }) {
       }
       await Store.patch('courses', code, { assessments: cur, updatedAt: U.nowIso() });
     }
+    let ns = 0;
+    const topics = U.groupBy(res.schedule.filter((_, i) => pickS[i]), (x) => x.courseCode);
+    for (const [code, list] of topics) {
+      const c = Store.course(code);
+      if (!c) continue;
+      const sched = (c.schedule || []).filter((x) => !list.some((y) => y.week === Number(x.week)));
+      for (const x of list) sched.push({ week: x.week, topic: x.topic });
+      sched.sort((a, b) => a.week - b.week);
+      await Store.patch('courses', code, { schedule: sched, updatedAt: U.nowIso() });
+      ns += list.length;
+    }
     let k = 0;
     for (const [i, t] of res.tasks.entries()) {
       if (!pickT[i]) continue;
@@ -392,7 +517,7 @@ function InfoParser({ onClose }) {
       });
       nt++;
     }
-    toast(`更新 ${na} 項評量、加入 ${nt} 項待辦`, 'ok');
+    toast(`更新 ${na} 項評量、${ns} 週主題，加入 ${nt} 項待辦`, 'ok');
     onClose();
   };
 
@@ -400,7 +525,7 @@ function InfoParser({ onClose }) {
     <div class="row between"><h3 class="panel__title">整理課程公告</h3><${Btn} kind="ghost" size="sm" icon="x" onClick=${onClose}>關閉</${Btn}></div>
     <${AIGate} />
     ${!res
-      ? html`<${Field} label="貼上雜亂的資訊" id="ip-text" hint="Learn.UQ 公告、作業說明、ECP 的 Assessment 表格、老師的 email 都可以，一次貼好幾段也行。">
+      ? html`<${Field} label="貼上雜亂的資訊" id="ip-text" hint="Learn.UQ 公告、作業說明、ECP 的 Assessment 或 Learning activities 表格、老師的 email 都可以，一次貼好幾段也行。">
           <textarea id="ip-text" rows="9" value=${text} onInput=${(e) => setText(e.target.value)}></textarea>
         </${Field}>
         <div class="form-actions"><${Btn} kind="primary" icon="spark" disabled=${ai.busy || rt.ai !== 'ready'} onClick=${analyze}>幫我整理</${Btn}></div>`
@@ -423,6 +548,14 @@ function InfoParser({ onClose }) {
                   <span>${t.title}</span>
                   <span class="muted small">${U.fmtMinutes(t.minutes)}${t.due ? ' · 截止 ' + U.fmtDate(t.due) : ''}</span>
                 </label>${t.why ? html`<div class="muted small plan-why">${t.why}</div>` : null}</li>`
+              )}</ul></div>`
+            : null}
+          ${res.schedule.length
+            ? html`<div><h4>每週主題</h4><ul class="parse-list">${res.schedule.map(
+                (x, i) => html`<li key=${i}><label class="check">
+                  <input type="checkbox" id=${'ip-s-' + i} checked=${!!pickS[i]} onChange=${(e) => setPickS({ ...pickS, [i]: e.target.checked })} />
+                  <${CourseChip} code=${x.courseCode} short /><span><b>W${x.week}</b> ${x.topic}</span>
+                </label></li>`
               )}</ul></div>`
             : null}
           ${res.notes_zh ? html`<div class="notice">${res.notes_zh}</div>` : null}

@@ -491,8 +491,10 @@ english_changes: at most 4, only for English prose answers; [] for code or maths
         clear_rate: levels.length ? Math.round((levels.filter((l) => l === 'clear').length / levels.length) * 100) + '%' : 'n/a',
         weak_topics: [...new Set(weak)].slice(-6),
         cards_due_today: due,
+        needs_preview: !!c.preview,
       };
     });
+    const timetable = (s.timetable.classes || []).map(classLine);
     const open = s.tasks
       .filter((t) => !t.done && (!t.date || (t.date >= from && t.date <= to)))
       .map((t) => ({ date: t.date, course: t.courseCode, title: t.title, minutes: t.minutes }));
@@ -502,9 +504,12 @@ TASK
 Make a realistic day-by-day study plan from ${from} to ${to} (inclusive).
 Today is ${today} (${U.fmtDate(today)}). Semester calendar: ${JSON.stringify(sem)}. Current phase: ${semesterPhase(today, sem).label}.
 Study time available: weekdays ${s.settings.minutes.weekday} minutes, weekends ${s.settings.minutes.weekend} minutes. Do not exceed these.
+Public holidays (no classes): ${JSON.stringify(sem.holidays || [])}.
+WEEKLY TIMETABLE (teaching weeks only; never schedule study during these times)
+${timetable.length ? timetable.join('\n') : '(not entered yet)'}
 COURSES (with deadlines and the learner's current state)
 ${JSON.stringify(courses, null, 1)}
-TASKS ALREADY PLANNED (keep them; do not duplicate): ${JSON.stringify(open)}
+TASKS ALREADY PLANNED (keep them; do not duplicate; tasks starting with a course code and "預習", "看…錄影" or "…前，複習" come from the timetable): ${JSON.stringify(open)}
 ${focusNote ? `THE LEARNER SAYS: ${focusNote}` : ''}
 
 RULES
@@ -514,6 +519,8 @@ RULES
 - Theory courses: active methods (Feynman explanation in English, scenario questions, compare tables), not re-reading.
 - Programming and maths: practice problems, code tracing, past exam questions; timed practice closer to exams.
 - English: at least 3 days a week include an English answering task (kind "english").
+- Courses with needs_preview=true are previewed before lectures; the preview and class-prep tasks already exist, so plan around them instead of adding more previews.
+- Soon after each lecture (within 24 hours), a short review: 書僮問答 5 題 or 導讀 of that week's slides. Lectures marked "watch recording" must be watched within 2 days.
 - Task titles in Traditional Chinese, specific and doable, starting with the course code, e.g. "MATH7861：用書僮做 6 題歸納法證明". 20-90 minutes each.
 
 Return ONLY JSON:
@@ -558,8 +565,10 @@ Return ONLY JSON:
 {
   "assessments": [{"course": "CODE", "name": "...", "due": "YYYY-MM-DD or null", "time": "HH:MM or \\"\\"", "weight": 25, "kind": "assignment" | "exam" | "quiz" | "project" | "presentation" | "other", "note": "short note"}],
   "tasks": [{"course": "CODE or null", "title": "actionable task in Traditional Chinese", "due": "YYYY-MM-DD or null", "priority": 1, "minutes": 60, "why": "short Chinese reason for its priority/order"}],
+  "schedule": [{"course": "CODE", "week": 10, "topic": "lecture topic for that teaching week, short, in the original language"}],
   "notes_zh": "anything important that is not a task (rules, hurdles, exam conditions), in Chinese"
 }
+"schedule" is only for weekly learning activities / lecture topics (e.g. a course profile's "Learning activities" table); use [] if the text has none.
 Interpret relative dates ("next Friday", "Week 11") with the calendar. If a date is unknown, use null — never guess. priority: 1 = do first.`;
     const r = await call(prompt, { tier: 'default', signal, onProgress });
     const codes = new Set(Store.courses().map((c) => c.code));
@@ -585,9 +594,70 @@ Interpret relative dates ("next Friday", "Week 11") with the calendar. If a date
           minutes: U.clamp(Number(t.minutes) || 45, 5, 600),
           why: str(t.why),
         })),
+      schedule: arr(r.schedule)
+        .filter((x) => x && codes.has(x.course) && Number(x.week) >= 1 && Number(x.week) <= 14 && str(x.topic))
+        .map((x) => ({ courseCode: x.course, week: Number(x.week), topic: U.truncate(str(x.topic), 140) })),
       notes_zh: str(r.notes_zh),
     };
   }
 
-  return { profile, summarize, tutorTurn, openingQuestion, recap, chat, explain, transcribe, generateQuiz, grade, plan, parseInfo, TYPE_RULES };
+  /* ---------- 預習 / lecture preview ---------- */
+  async function preview({ course, week, topic, date, material, signal, onProgress }) {
+    const text = material ? Extract.sampleEvenly(await Store.getText(material.id), 40000) : '';
+    const earlier = Store.state.materials
+      .filter((m) => m.courseCode === course.code && m.summary && (!m.week || m.week < week))
+      .sort((a, b) => (b.week || 0) - (a.week || 0))
+      .slice(0, 4)
+      .map((m) => `- ${m.title}${m.week ? ` (week ${m.week})` : ''}: ${m.summary.key_points.slice(0, 4).map((p) => p.en).join(' | ')}`)
+      .join('\n');
+    const prompt = `${profile()}
+
+${courseBlock(course)}
+${KIND_STYLE[course.kind] || ''}
+
+TASK
+Write a short PREVIEW guide (預習) for the learner to read BEFORE the week ${week} lecture${date ? ` on ${date}` : ''}${topic ? ` about "${topic}"` : ''}. The goal is to arrive prepared: know what is coming, refresh what it builds on, and try a few easy warm-up questions. Keep it light: about 20-30 minutes of work.
+${material ? `The lecture slides are below; base the preview on them.\n${NOTE_EXTRACTED}\n${materialBlock(material, text)}` : `No slides are available yet: use the standard content of this topic in a course like this, and say so in "basis_zh".`}
+${earlier ? `Earlier materials the learner has studied:\n${earlier}` : ''}
+
+Return ONLY one JSON object:
+{
+  "title_en": "topic title",
+  "title_zh": "中文標題",
+  "basis_zh": "one line: based on the slides, or a general preview of the topic",
+  "what_en": "2-3 short sentences: what this lecture will teach",
+  "what_zh": "same in Traditional Chinese",
+  "why_en": "1-2 sentences: why it matters (later topics, assessment, real use)",
+  "why_zh": "same in Chinese",
+  "prerequisites": [{"en": "concept to refresh first", "zh": "中文"}],
+  "key_terms": [{"term": "English term", "zh": "中文", "def_en": "definition in 20 words or fewer", "example_en": "one short example"}],
+  "watch_for": [{"en": "what to listen for in the lecture", "zh": "中文"}],
+  "warmup": [{"q_en": "easy warm-up question", "q_zh": "中文提示", "code": "", "answer_en": "short answer", "answer_zh": "中文解答"}],
+  "ask_in_class": ["a question worth asking the lecturer or tutor, in English"],
+  "minutes": 25
+}
+Counts: prerequisites 2-4, key_terms 5-8, watch_for 3-4, warmup 2-3 (programming: predict-the-output or small reasoning; maths: a tiny example or definition check), ask_in_class 2-3.`;
+    const r = await call(prompt, { tier: 'default', signal, onProgress });
+    return {
+      title_en: str(r.title_en) || topic || `Week ${week}`,
+      title_zh: str(r.title_zh),
+      basis_zh: str(r.basis_zh),
+      what_en: str(r.what_en),
+      what_zh: str(r.what_zh),
+      why_en: str(r.why_en),
+      why_zh: str(r.why_zh),
+      prerequisites: arr(r.prerequisites).map(pair),
+      key_terms: arr(r.key_terms)
+        .map((t) => ({ term: str(t.term), zh: str(t.zh), def_en: str(t.def_en), example_en: str(t.example_en) }))
+        .filter((t) => t.term),
+      watch_for: arr(r.watch_for).map(pair),
+      warmup: arr(r.warmup)
+        .map((w) => ({ q_en: str(w.q_en), q_zh: str(w.q_zh), code: str(w.code), answer_en: str(w.answer_en), answer_zh: str(w.answer_zh) }))
+        .filter((w) => w.q_en),
+      ask_in_class: arr(r.ask_in_class).map(str).filter(Boolean),
+      minutes: U.clamp(Number(r.minutes) || 25, 5, 90),
+    };
+  }
+
+  return { profile, preview, summarize, tutorTurn, openingQuestion, recap, chat, explain, transcribe, generateQuiz, grade, plan, parseInfo, TYPE_RULES };
 })();

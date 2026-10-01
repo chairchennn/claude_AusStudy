@@ -53,6 +53,16 @@ function suggestions(s, today) {
     const noGuide = mats.find((m) => !m.summary);
     if (noGuide) list.push({ key: 'sum-' + noGuide.id, course: c.code, text: `幫「${U.truncate(noGuide.title, 28)}」做導讀`, act: () => go('courses', { course: c.code, material: noGuide.id }) });
   }
+  for (const c of courses.filter((x) => x.preview)) {
+    const next = lectureWeeks(c.code, today, 3, s.timetable, s.settings.semester)[0];
+    if (next && !s.previews.some((p) => p.id === `${c.code}-W${next.week}`))
+      list.unshift({
+        key: 'prev-' + c.code + next.week,
+        course: c.code,
+        text: `預習 W${next.week}：${U.fmtDate(next.date)} ${next.cls.start} 的講課`,
+        act: () => go('courses', { course: c.code, tab: 'preview', week: next.week }),
+      });
+  }
   for (const w of weakSpots(s.sessions, 2))
     list.push({
       key: 'weak-' + w.session.id + w.turn.at,
@@ -70,6 +80,48 @@ function suggestions(s, today) {
       act: () => go('plan', { parse: true }),
     });
   return list.slice(0, 6);
+}
+
+/** Today's classes, or the next class day, with 預習 status for courses that need it. */
+function TodayClasses() {
+  const s = useStore();
+  const tt = s.timetable;
+  if (!tt.classes.length) return null;
+  const today = U.today();
+  const sem = s.settings.semester;
+  const todays = classesOn(today, tt, sem);
+  const ahead = upcomingClasses(U.addDays(today, 1), 21, tt, sem);
+  const nextDay = ahead.length ? ahead[0].date : null;
+  const shown = todays.length ? todays.map((cls) => ({ date: today, cls })) : ahead.filter((x) => x.date === nextDay);
+  const phase = semesterPhase(today, sem);
+  const previewed = (code, week) => s.previews.some((p) => p.id === `${code}-W${week}`);
+  return html`<section class="classes" aria-label="課表">
+    <div class="classes__head">
+      <h2 class="section__title">${todays.length ? '今天的課' : nextDay ? `下次上課 · ${U.fmtDate(nextDay)}（${U.relDay(nextDay)}）` : '課表'}</h2>
+      ${!todays.length ? html`<span class="muted small">今天沒有課${phase.phase === 'break' ? '（期中假）' : phase.holiday ? '（公眾假期）' : ''}</span>` : null}
+    </div>
+    ${shown.length
+      ? html`<ul class="classes__list">
+          ${shown.map(({ date, cls }) => {
+            const c = Store.course(cls.courseCode);
+            const week = semesterPhase(date, sem).week;
+            const needsPrev = c && c.preview && cls.type === 'lecture';
+            return html`<li key=${cls.id || cls.courseCode + cls.start} class=${'cls c-' + courseColor(cls.courseCode)}>
+              <span class="cls__time">${cls.start}–${cls.end}</span>
+              <${CourseChip} code=${cls.courseCode} short />
+              <span class="cls__type">${CLASS_TYPES[cls.type] || cls.type}</span>
+              ${cls.location ? html`<span class="cls__loc">${cls.location}</span>` : null}
+              ${cls.mode === 'recording' ? html`<${Pill} tone="warn">看錄影</${Pill}>` : null}
+              ${needsPrev
+                ? previewed(cls.courseCode, week)
+                  ? html`<button type="button" class="pill pill--ok pill-btn" onClick=${() => go('courses', { course: cls.courseCode, tab: 'preview', preview: `${cls.courseCode}-W${week}` })}>已預習 W${week}</button>`
+                  : html`<button type="button" class="pill pill--pen pill-btn" onClick=${() => go('courses', { course: cls.courseCode, tab: 'preview', week })}>預習 W${week}</button>`
+                : null}
+            </li>`;
+          })}
+        </ul>`
+      : html`<p class="muted small">這學期的課都上完了。</p>`}
+  </section>`;
 }
 
 function HomeView() {
@@ -100,6 +152,8 @@ function HomeView() {
         ${streak ? `連續讀書 ${streak} 天` : '今天開始累積連續天數'}
       </p>
     </header>
+
+    <${TodayClasses} />
 
     ${!s.loaded
       ? html`<div class="notice">正在從雲端載入你的資料…</div>`

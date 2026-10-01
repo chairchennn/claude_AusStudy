@@ -11,6 +11,7 @@ const DEFAULT_SETTINGS = {
     revisionStart: '2026-11-02',
     examStart: '2026-11-07',
     examEnd: '2026-11-21',
+    holidays: [],
   },
   minutes: { weekday: 120, weekend: 180 },
   english: 'B1',
@@ -25,7 +26,9 @@ const COLLECTIONS = {
   quizzes: { order: 'createdAt', limit: 80 },
   tasks: {},
   days: { order: 'date', limit: 120 },
+  previews: {},
 };
+const META_DOCS = ['settings', 'plan', 'timetable'];
 
 const Store = (() => {
   const state = {
@@ -38,8 +41,10 @@ const Store = (() => {
     quizzes: [],
     tasks: [],
     days: [],
+    previews: [],
     settings: DEFAULT_SETTINGS,
     plan: null,
+    timetable: { classes: [] },
     error: null,
   };
   const loadedParts = new Set();
@@ -61,9 +66,10 @@ const Store = (() => {
 
   const markLoaded = (part) => {
     loadedParts.add(part);
-    if (!state.loaded && loadedParts.size >= Object.keys(COLLECTIONS).length + 2) state.loaded = true;
+    if (!state.loaded && loadedParts.size >= Object.keys(COLLECTIONS).length + META_DOCS.length) state.loaded = true;
   };
 
+  const normTimetable = (t) => ({ classes: Array.isArray(t && t.classes) ? t.classes : [] });
   const mergeSettings = (s) => ({
     ...DEFAULT_SETTINGS,
     ...(s || {}),
@@ -102,6 +108,7 @@ const Store = (() => {
     if (name === 'meta') {
       state.settings = mergeSettings(localData.meta.settings);
       state.plan = localData.meta.plan || null;
+      state.timetable = normTimetable(localData.meta.timetable);
       return;
     }
     if (!COLLECTIONS[name]) return;
@@ -162,6 +169,17 @@ const Store = (() => {
         emit();
       }
     );
+    db.doc('meta/timetable').onSnapshot(
+      (snap) => {
+        state.timetable = normTimetable(snap.exists ? snap.data() : null);
+        markLoaded('timetable');
+        emit();
+      },
+      () => {
+        markLoaded('timetable');
+        emit();
+      }
+    );
     // Never leave the UI waiting forever on a slow first snapshot.
     setTimeout(() => {
       if (!state.loaded) {
@@ -187,6 +205,7 @@ const Store = (() => {
     if (col === 'meta') {
       if (id === 'settings') state.settings = mergeSettings(data);
       if (id === 'plan') state.plan = data;
+      if (id === 'timetable') state.timetable = normTimetable(data);
       return;
     }
     if (!COLLECTIONS[col]) return;
@@ -217,7 +236,7 @@ const Store = (() => {
 
   /** Shallow-merge a patch into an existing document (whole-field replace, like db.update for arrays). */
   async function patch(col, id, partial) {
-    const current = col === 'meta' ? (id === 'settings' ? state.settings : state.plan) : get(col, id);
+    const current = col === 'meta' ? { settings: state.settings, plan: state.plan, timetable: state.timetable }[id] : get(col, id);
     const merged = { ...(current || {}), ...clean(partial) };
     delete merged.id;
     return set(col, id, merged);
@@ -289,7 +308,7 @@ const Store = (() => {
   }
 
   async function exportAll() {
-    const out = { app: 'shutong', version: 1, exportedAt: U.nowIso(), meta: { settings: state.settings, plan: state.plan } };
+    const out = { app: 'shutong', version: 1, exportedAt: U.nowIso(), meta: { settings: state.settings, plan: state.plan, timetable: state.timetable } };
     for (const name of Object.keys(COLLECTIONS)) out[name] = state[name];
     out.materialText = {};
     for (const m of state.materials) out.materialText[m.id] = await getText(m.id);
@@ -305,6 +324,7 @@ const Store = (() => {
     for (const [id, text] of Object.entries(data.materialText || {})) jobs.push(() => setText(id, String(text || '')));
     if (data.meta && data.meta.settings) jobs.push(() => set('meta', 'settings', data.meta.settings));
     if (data.meta && data.meta.plan) jobs.push(() => set('meta', 'plan', data.meta.plan));
+    if (data.meta && data.meta.timetable) jobs.push(() => set('meta', 'timetable', data.meta.timetable));
     for (const job of jobs) {
       await job();
       onStep(++done, jobs.length);

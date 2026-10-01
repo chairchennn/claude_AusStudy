@@ -8,7 +8,10 @@
    "classesEnd": "2026-10-30",
    "revisionStart": "2026-11-02",
    "examStart": "2026-11-07",
-   "examEnd": "2026-11-21"
+   "examEnd": "2026-11-21",
+   "holidays": [
+    "2026-10-05"
+   ]
   },
   "minutes": {
    "weekday": 120,
@@ -17,6 +20,122 @@
   "english": "B1",
   "showZh": true
  },
+ "meta/timetable": {
+  "classes": [
+   {
+    "id": "c01",
+    "courseCode": "CYBR7002",
+    "type": "lecture",
+    "day": 1,
+    "start": "10:00",
+    "end": "12:00",
+    "location": "",
+    "mode": "recording",
+    "note": "和 MATH7861 講課衝堂"
+   },
+   {
+    "id": "c02",
+    "courseCode": "MATH7861",
+    "type": "lecture",
+    "day": 1,
+    "start": "10:00",
+    "end": "11:00",
+    "location": "03-206 Steele Building",
+    "mode": "in-person"
+   },
+   {
+    "id": "c03",
+    "courseCode": "CSSE7030",
+    "type": "lecture",
+    "day": 2,
+    "start": "12:00",
+    "end": "14:00",
+    "location": "03-309 Steele Building",
+    "mode": "in-person"
+   },
+   {
+    "id": "c04",
+    "courseCode": "MATH7861",
+    "type": "lecture",
+    "day": 2,
+    "start": "14:00",
+    "end": "15:00",
+    "location": "03-206 Steele Building",
+    "mode": "in-person"
+   },
+   {
+    "id": "c05",
+    "courseCode": "MATH7861",
+    "type": "applied",
+    "day": 3,
+    "start": "12:00",
+    "end": "14:00",
+    "location": "32-208 Gordon Greenwood Building",
+    "mode": "in-person"
+   },
+   {
+    "id": "c06",
+    "courseCode": "CYBR7001",
+    "type": "lecture",
+    "day": 3,
+    "start": "16:00",
+    "end": "18:00",
+    "location": "84-128 Therapies Building",
+    "mode": "in-person"
+   },
+   {
+    "id": "c07",
+    "courseCode": "MATH7861",
+    "type": "lecture",
+    "day": 4,
+    "start": "13:00",
+    "end": "14:00",
+    "location": "63-348",
+    "mode": "in-person"
+   },
+   {
+    "id": "c08",
+    "courseCode": "CSSE7030",
+    "type": "applied",
+    "day": 4,
+    "start": "14:00",
+    "end": "16:00",
+    "location": "11A-101 ModWest",
+    "mode": "in-person"
+   },
+   {
+    "id": "c09",
+    "courseCode": "CSSE7030",
+    "type": "practical",
+    "day": 4,
+    "start": "16:00",
+    "end": "18:00",
+    "location": "69-315 Building 69",
+    "mode": "in-person"
+   },
+   {
+    "id": "c10",
+    "courseCode": "CYBR7001",
+    "type": "applied",
+    "day": 5,
+    "start": "08:00",
+    "end": "09:00",
+    "location": "47A-141",
+    "mode": "in-person"
+   },
+   {
+    "id": "c11",
+    "courseCode": "CYBR7002",
+    "type": "applied",
+    "day": 5,
+    "start": "09:00",
+    "end": "10:00",
+    "location": "32-215 Gordon Greenwood Building",
+    "mode": "in-person"
+   }
+  ],
+  "updatedAt": "2026-10-01T00:00:00.000Z"
+ },
  "courses/CSSE7030": {
   "code": "CSSE7030",
   "name": "Introduction to Programming",
@@ -24,8 +143,9 @@
   "kind": "programming",
   "color": "teal",
   "order": 1,
-  "verified": false,
-  "note": "評量依過往課綱整理，請核對本學期 ECP",
+  "verified": true,
+  "preview": true,
+  "note": "期末考 40%，需達門檻（hurdle）",
   "topics": [
    "Python basics: types, expressions, variables",
    "Functions and docstrings",
@@ -37,50 +157,43 @@
    "Inheritance",
    "GUI programming and MVC (tkinter)"
   ],
+  "schedule": [],
   "assessments": [
    {
     "id": "a-csse-1",
-    "name": "Assignment 1",
-    "due": null,
+    "name": "Computer exercise 1 (Assignment 1)",
+    "due": "2026-09-04",
+    "time": "15:00",
     "weight": 15,
     "kind": "assignment",
     "status": "done",
-    "note": "應該已繳交，請確認"
+    "note": ""
    },
    {
     "id": "a-csse-2",
     "name": "In-semester exam（期中考）",
     "due": null,
-    "weight": 20,
+    "weight": 25,
     "kind": "exam",
     "status": "done",
-    "note": "UQ 期中考週為 9/5、9/11–13，請確認"
+    "note": "9/5–9/20 之間的週六，已考完"
    },
    {
     "id": "a-csse-3",
-    "name": "Assignment 2",
-    "due": null,
-    "weight": 25,
+    "name": "Computer exercise 2 (Assignment 2)",
+    "due": "2026-10-23",
+    "time": "15:00",
+    "weight": 20,
     "kind": "assignment",
     "status": "todo",
-    "note": "截止日請查 ECP 後填入"
-   },
-   {
-    "id": "a-csse-4",
-    "name": "Assignment 2 interview（面試，需通過）",
-    "due": null,
-    "weight": null,
-    "kind": "other",
-    "status": "todo",
-    "note": "Hurdle：pass/fail"
+    "note": ""
    }
   ],
   "exam": {
    "name": "期末考",
    "date": null,
    "weight": 40,
-   "window": "11/7–11/21 考試期間（時間表公布後填入日期）",
-   "note": "依過往課綱"
+   "note": "Hurdle（需達門檻）· 身分驗證 · 現場考試"
   },
   "createdAt": "2026-10-01T00:00:00.000Z",
   "updatedAt": "2026-10-01T00:00:00.000Z"
@@ -92,8 +205,9 @@
   "kind": "theory",
   "color": "plum",
   "order": 2,
-  "verified": false,
-  "note": "100% 作業（至少一份小組作業），沒有期末考",
+  "verified": true,
+  "preview": false,
+  "note": "沒有期末考；3A 研究報告和 3B 研究發表都需達門檻",
   "topics": [
    "Core concepts: CIA triad, threats, vulnerabilities, risk",
    "Threat actors and their motives",
@@ -103,7 +217,48 @@
    "Governance, policy and national security",
    "Human factors and social engineering"
   ],
-  "assessments": [],
+  "schedule": [],
+  "assessments": [
+   {
+    "id": "a-cybr1-1",
+    "name": "Assignment 1: Individual Work",
+    "due": "2026-09-01",
+    "time": "16:00",
+    "weight": 35,
+    "kind": "assignment",
+    "status": "done",
+    "note": ""
+   },
+   {
+    "id": "a-cybr1-2",
+    "name": "Assignment 2: Group Submission",
+    "due": "2026-09-22",
+    "time": "16:00",
+    "weight": 15,
+    "kind": "assignment",
+    "status": "done",
+    "note": "小組"
+   },
+   {
+    "id": "a-cybr1-3",
+    "name": "Assignment 3A: Research Paper",
+    "due": "2026-10-20",
+    "time": "16:00",
+    "weight": 20,
+    "kind": "assignment",
+    "status": "todo",
+    "note": "Hurdle（需達門檻）"
+   },
+   {
+    "id": "a-cybr1-4",
+    "name": "Assignment 3B: Research Seminar (Individual)",
+    "due": "2026-11-09",
+    "weight": 30,
+    "kind": "presentation",
+    "status": "todo",
+    "note": "11/9–11/13 之間現場個人發表 · Hurdle · 身分驗證"
+   }
+  ],
   "exam": null,
   "createdAt": "2026-10-01T00:00:00.000Z",
   "updatedAt": "2026-10-01T00:00:00.000Z"
@@ -115,8 +270,9 @@
   "kind": "theory",
   "color": "ochre",
   "order": 3,
-  "verified": false,
-  "note": "評量依過往課綱整理，請核對本學期 ECP",
+  "verified": true,
+  "preview": false,
+  "note": "期末考 55%，需達門檻（hurdle）；10/16 同一天有 Report 和 Quiz 3",
   "topics": [
    "Governance of information and ICT assets",
    "Business impact analysis (confidentiality, integrity, availability)",
@@ -133,41 +289,69 @@
    "Industrial control systems",
    "Cooperative and automated vehicles"
   ],
+  "schedule": [],
   "assessments": [
    {
-    "id": "a-cybr2-1",
-    "name": "Practical quizzes（實作課小考）",
-    "due": null,
-    "weight": null,
-    "kind": "quiz",
+    "id": "a-cybr2-6",
+    "name": "Report",
+    "due": "2026-10-16",
+    "time": "14:00",
+    "weight": 15,
+    "kind": "assignment",
     "status": "todo",
-    "note": "在 practical 課堂中作答"
+    "note": "線上繳交"
+   },
+   {
+    "id": "a-cybr2-1",
+    "name": "In-class Quiz 1",
+    "due": "2026-08-21",
+    "weight": 3.75,
+    "kind": "quiz",
+    "status": "done",
+    "note": "四次小考合計 15%"
    },
    {
     "id": "a-cybr2-2",
-    "name": "Mid-semester in-class test（期中課堂測驗）",
-    "due": null,
-    "weight": null,
-    "kind": "exam",
-    "status": "todo",
-    "note": "可能已舉行，請確認"
+    "name": "In-class Quiz 2",
+    "due": "2026-09-11",
+    "weight": 3.75,
+    "kind": "quiz",
+    "status": "done",
+    "note": "四次小考合計 15%"
    },
    {
     "id": "a-cybr2-3",
-    "name": "Assignment",
-    "due": null,
-    "weight": null,
-    "kind": "assignment",
+    "name": "In-class Quiz 3",
+    "due": "2026-10-16",
+    "weight": 3.75,
+    "kind": "quiz",
     "status": "todo",
-    "note": "截止日請查 ECP 後填入"
+    "note": "週五 applied class 時間線上作答；四次合計 15%"
+   },
+   {
+    "id": "a-cybr2-4",
+    "name": "In-class Quiz 4",
+    "due": "2026-10-30",
+    "weight": 3.75,
+    "kind": "quiz",
+    "status": "todo",
+    "note": "週五 applied class 時間線上作答；四次合計 15%"
+   },
+   {
+    "id": "a-cybr2-5",
+    "name": "Presentation（小組）",
+    "due": "2026-09-21",
+    "weight": 15,
+    "kind": "presentation",
+    "status": "done",
+    "note": "9/21–9/22"
    }
   ],
   "exam": {
    "name": "期末考",
    "date": null,
-   "weight": null,
-   "window": "11/7–11/21 考試期間（時間表公布後填入日期）",
-   "note": "依過往課綱"
+   "weight": 55,
+   "note": "Hurdle（需達門檻）· 身分驗證 · 現場考試"
   },
   "createdAt": "2026-10-01T00:00:00.000Z",
   "updatedAt": "2026-10-01T00:00:00.000Z"
@@ -179,8 +363,9 @@
   "kind": "math",
   "color": "moss",
   "order": 4,
-  "verified": false,
-  "note": "評量依過往課綱整理，請核對本學期 ECP",
+  "verified": true,
+  "preview": true,
+  "note": "期末考 50%，需達門檻（hurdle）",
   "topics": [
    "Propositional and predicate logic",
    "Valid arguments and proof techniques",
@@ -194,41 +379,32 @@
    "Fields and applications of finite fields",
    "Elementary number theory"
   ],
+  "schedule": [],
   "assessments": [
    {
     "id": "a-math-1",
-    "name": "Applied class exercises（每週實作課練習）",
+    "name": "Applied class exercises（每週 applied class）",
     "due": null,
-    "weight": null,
+    "weight": 30,
     "kind": "quiz",
     "status": "doing",
-    "note": "過往為 30%（2025 S2）；MATH1061 2026 S2 為 40%，取 12 次中最好 8 次"
+    "note": "每週三 applied class 當場完成，12 次取最好 8 次（第 2–13 週，最後一次 10/28）"
    },
    {
     "id": "a-math-2",
-    "name": "Assignment 1",
+    "name": "In-semester examination（期中考）",
     "due": null,
-    "weight": 5,
-    "kind": "assignment",
+    "weight": 20,
+    "kind": "exam",
     "status": "done",
-    "note": "2025 S2 為 9 月初截止，請確認"
-   },
-   {
-    "id": "a-math-3",
-    "name": "Assignment 2",
-    "due": null,
-    "weight": 5,
-    "kind": "assignment",
-    "status": "todo",
-    "note": "2025 S2 為 10 月下旬截止，請查 ECP"
+    "note": "9/5–9/20 之間的週六，已考完"
    }
   ],
   "exam": {
    "name": "期末考",
    "date": null,
-   "weight": 60,
-   "window": "11/7–11/21 考試期間（時間表公布後填入日期）",
-   "note": "Hurdle（需達門檻）、紙筆考試（依過往課綱）"
+   "weight": 50,
+   "note": "Hurdle（需達門檻）· 身分驗證 · 現場考試"
   },
   "createdAt": "2026-10-01T00:00:00.000Z",
   "updatedAt": "2026-10-01T00:00:00.000Z"
@@ -1248,8 +1424,9 @@
   "minutes": 20,
   "kind": "other",
   "priority": 1,
-  "why": "倒數、計畫和衝刺建議都靠這些日期；目前是依過往課綱整理的。",
-  "done": false,
+  "why": "倒數、計畫和衝刺建議都靠這些日期。",
+  "done": true,
+  "doneAt": "2026-10-01T00:00:00.000Z",
   "order": 0,
   "source": "starter",
   "createdAt": "2026-10-01T00:00:00.000Z"
@@ -1263,6 +1440,7 @@
   "priority": 2,
   "why": "期末考過往占 60% 且有門檻，越早開始越好。",
   "done": false,
+  "doneAt": null,
   "order": 1,
   "source": "starter",
   "createdAt": "2026-10-01T00:00:00.000Z"
@@ -1276,6 +1454,7 @@
   "priority": 2,
   "why": "先熟悉閃卡的用法；之後每天 15 分鐘。",
   "done": false,
+  "doneAt": null,
   "order": 2,
   "source": "starter",
   "createdAt": "2026-10-01T00:00:00.000Z"
@@ -1289,6 +1468,7 @@
   "priority": 2,
   "why": "理論課最需要把觀念講出來，同時練英文。",
   "done": false,
+  "doneAt": null,
   "order": 3,
   "source": "starter",
   "createdAt": "2026-10-01T00:00:00.000Z"
@@ -1302,6 +1482,7 @@
   "priority": 2,
   "why": "期末考是紙筆作答，追蹤程式是最常考的題型。",
   "done": false,
+  "doneAt": null,
   "order": 4,
   "source": "starter",
   "createdAt": "2026-10-01T00:00:00.000Z"
@@ -1315,6 +1496,7 @@
   "priority": 2,
   "why": "有了作業日期和你的時間，計畫才會準。",
   "done": false,
+  "doneAt": null,
   "order": 5,
   "source": "starter",
   "createdAt": "2026-10-01T00:00:00.000Z"

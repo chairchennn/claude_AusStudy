@@ -24,12 +24,14 @@ const settings = {
     revisionStart: '2026-11-02',
     examStart: '2026-11-07',
     examEnd: '2026-11-21',
+    holidays: ['2026-10-05'],
   },
   minutes: { weekday: 120, weekend: 180 },
   english: 'B1',
   showZh: true,
 };
 
+// Assessment details come from the 2026 Semester 2 Electronic Course Profiles (screenshots the user shared on 2026-10-01).
 const courses = {
   CSSE7030: {
     code: 'CSSE7030',
@@ -38,8 +40,9 @@ const courses = {
     kind: 'programming',
     color: 'teal',
     order: 1,
-    verified: false,
-    note: '評量依過往課綱整理，請核對本學期 ECP',
+    verified: true,
+    preview: true,
+    note: '期末考 40%，需達門檻（hurdle）',
     topics: [
       'Python basics: types, expressions, variables',
       'Functions and docstrings',
@@ -51,13 +54,13 @@ const courses = {
       'Inheritance',
       'GUI programming and MVC (tkinter)',
     ],
+    schedule: [],
     assessments: [
-      { id: 'a-csse-1', name: 'Assignment 1', due: null, weight: 15, kind: 'assignment', status: 'done', note: '應該已繳交，請確認' },
-      { id: 'a-csse-2', name: 'In-semester exam（期中考）', due: null, weight: 20, kind: 'exam', status: 'done', note: 'UQ 期中考週為 9/5、9/11–13，請確認' },
-      { id: 'a-csse-3', name: 'Assignment 2', due: null, weight: 25, kind: 'assignment', status: 'todo', note: '截止日請查 ECP 後填入' },
-      { id: 'a-csse-4', name: 'Assignment 2 interview（面試，需通過）', due: null, weight: null, kind: 'other', status: 'todo', note: 'Hurdle：pass/fail' },
+      { id: 'a-csse-1', name: 'Computer exercise 1 (Assignment 1)', due: '2026-09-04', time: '15:00', weight: 15, kind: 'assignment', status: 'done', note: '' },
+      { id: 'a-csse-2', name: 'In-semester exam（期中考）', due: null, weight: 25, kind: 'exam', status: 'done', note: '9/5–9/20 之間的週六，已考完' },
+      { id: 'a-csse-3', name: 'Computer exercise 2 (Assignment 2)', due: '2026-10-23', time: '15:00', weight: 20, kind: 'assignment', status: 'todo', note: '' },
     ],
-    exam: { name: '期末考', date: null, weight: 40, window: EXAM_WINDOW, note: '依過往課綱' },
+    exam: { name: '期末考', date: null, weight: 40, note: 'Hurdle（需達門檻）· 身分驗證 · 現場考試' },
   },
   CYBR7001: {
     code: 'CYBR7001',
@@ -66,8 +69,9 @@ const courses = {
     kind: 'theory',
     color: 'plum',
     order: 2,
-    verified: false,
-    note: '100% 作業（至少一份小組作業），沒有期末考',
+    verified: true,
+    preview: false,
+    note: '沒有期末考；3A 研究報告和 3B 研究發表都需達門檻',
     topics: [
       'Core concepts: CIA triad, threats, vulnerabilities, risk',
       'Threat actors and their motives',
@@ -77,7 +81,13 @@ const courses = {
       'Governance, policy and national security',
       'Human factors and social engineering',
     ],
-    assessments: [],
+    schedule: [],
+    assessments: [
+      { id: 'a-cybr1-1', name: 'Assignment 1: Individual Work', due: '2026-09-01', time: '16:00', weight: 35, kind: 'assignment', status: 'done', note: '' },
+      { id: 'a-cybr1-2', name: 'Assignment 2: Group Submission', due: '2026-09-22', time: '16:00', weight: 15, kind: 'assignment', status: 'done', note: '小組' },
+      { id: 'a-cybr1-3', name: 'Assignment 3A: Research Paper', due: '2026-10-20', time: '16:00', weight: 20, kind: 'assignment', status: 'todo', note: 'Hurdle（需達門檻）' },
+      { id: 'a-cybr1-4', name: 'Assignment 3B: Research Seminar (Individual)', due: '2026-11-09', weight: 30, kind: 'presentation', status: 'todo', note: '11/9–11/13 之間現場個人發表 · Hurdle · 身分驗證' },
+    ],
     exam: null,
   },
   CYBR7002: {
@@ -87,8 +97,9 @@ const courses = {
     kind: 'theory',
     color: 'ochre',
     order: 3,
-    verified: false,
-    note: '評量依過往課綱整理，請核對本學期 ECP',
+    verified: true,
+    preview: false,
+    note: '期末考 55%，需達門檻（hurdle）；10/16 同一天有 Report 和 Quiz 3',
     topics: [
       'Governance of information and ICT assets',
       'Business impact analysis (confidentiality, integrity, availability)',
@@ -105,12 +116,16 @@ const courses = {
       'Industrial control systems',
       'Cooperative and automated vehicles',
     ],
+    schedule: [],
     assessments: [
-      { id: 'a-cybr2-1', name: 'Practical quizzes（實作課小考）', due: null, weight: null, kind: 'quiz', status: 'todo', note: '在 practical 課堂中作答' },
-      { id: 'a-cybr2-2', name: 'Mid-semester in-class test（期中課堂測驗）', due: null, weight: null, kind: 'exam', status: 'todo', note: '可能已舉行，請確認' },
-      { id: 'a-cybr2-3', name: 'Assignment', due: null, weight: null, kind: 'assignment', status: 'todo', note: '截止日請查 ECP 後填入' },
+      { id: 'a-cybr2-6', name: 'Report', due: '2026-10-16', time: '14:00', weight: 15, kind: 'assignment', status: 'todo', note: '線上繳交' },
+      { id: 'a-cybr2-1', name: 'In-class Quiz 1', due: '2026-08-21', weight: 3.75, kind: 'quiz', status: 'done', note: '四次小考合計 15%' },
+      { id: 'a-cybr2-2', name: 'In-class Quiz 2', due: '2026-09-11', weight: 3.75, kind: 'quiz', status: 'done', note: '四次小考合計 15%' },
+      { id: 'a-cybr2-3', name: 'In-class Quiz 3', due: '2026-10-16', weight: 3.75, kind: 'quiz', status: 'todo', note: '週五 applied class 時間線上作答；四次合計 15%' },
+      { id: 'a-cybr2-4', name: 'In-class Quiz 4', due: '2026-10-30', weight: 3.75, kind: 'quiz', status: 'todo', note: '週五 applied class 時間線上作答；四次合計 15%' },
+      { id: 'a-cybr2-5', name: 'Presentation（小組）', due: '2026-09-21', weight: 15, kind: 'presentation', status: 'done', note: '9/21–9/22' },
     ],
-    exam: { name: '期末考', date: null, weight: null, window: EXAM_WINDOW, note: '依過往課綱' },
+    exam: { name: '期末考', date: null, weight: 55, note: 'Hurdle（需達門檻）· 身分驗證 · 現場考試' },
   },
   MATH7861: {
     code: 'MATH7861',
@@ -119,8 +134,9 @@ const courses = {
     kind: 'math',
     color: 'moss',
     order: 4,
-    verified: false,
-    note: '評量依過往課綱整理，請核對本學期 ECP',
+    verified: true,
+    preview: true,
+    note: '期末考 50%，需達門檻（hurdle）',
     topics: [
       'Propositional and predicate logic',
       'Valid arguments and proof techniques',
@@ -134,13 +150,31 @@ const courses = {
       'Fields and applications of finite fields',
       'Elementary number theory',
     ],
+    schedule: [],
     assessments: [
-      { id: 'a-math-1', name: 'Applied class exercises（每週實作課練習）', due: null, weight: null, kind: 'quiz', status: 'doing', note: '過往為 30%（2025 S2）；MATH1061 2026 S2 為 40%，取 12 次中最好 8 次' },
-      { id: 'a-math-2', name: 'Assignment 1', due: null, weight: 5, kind: 'assignment', status: 'done', note: '2025 S2 為 9 月初截止，請確認' },
-      { id: 'a-math-3', name: 'Assignment 2', due: null, weight: 5, kind: 'assignment', status: 'todo', note: '2025 S2 為 10 月下旬截止，請查 ECP' },
+      { id: 'a-math-1', name: 'Applied class exercises（每週 applied class）', due: null, weight: 30, kind: 'quiz', status: 'doing', note: '每週三 applied class 當場完成，12 次取最好 8 次（第 2–13 週，最後一次 10/28）' },
+      { id: 'a-math-2', name: 'In-semester examination（期中考）', due: null, weight: 20, kind: 'exam', status: 'done', note: '9/5–9/20 之間的週六，已考完' },
     ],
-    exam: { name: '期末考', date: null, weight: 60, window: EXAM_WINDOW, note: 'Hurdle（需達門檻）、紙筆考試（依過往課綱）' },
+    exam: { name: '期末考', date: null, weight: 50, note: 'Hurdle（需達門檻）· 身分驗證 · 現場考試' },
   },
+};
+
+// Weekly timetable (screenshot shared 2026-10-01). Monday's CYBR7002 lecture clashes with MATH7861, so it is watched as a recording.
+const timetable = {
+  classes: [
+    { id: 'c01', courseCode: 'CYBR7002', type: 'lecture', day: 1, start: '10:00', end: '12:00', location: '', mode: 'recording', note: '和 MATH7861 講課衝堂' },
+    { id: 'c02', courseCode: 'MATH7861', type: 'lecture', day: 1, start: '10:00', end: '11:00', location: '03-206 Steele Building', mode: 'in-person' },
+    { id: 'c03', courseCode: 'CSSE7030', type: 'lecture', day: 2, start: '12:00', end: '14:00', location: '03-309 Steele Building', mode: 'in-person' },
+    { id: 'c04', courseCode: 'MATH7861', type: 'lecture', day: 2, start: '14:00', end: '15:00', location: '03-206 Steele Building', mode: 'in-person' },
+    { id: 'c05', courseCode: 'MATH7861', type: 'applied', day: 3, start: '12:00', end: '14:00', location: '32-208 Gordon Greenwood Building', mode: 'in-person' },
+    { id: 'c06', courseCode: 'CYBR7001', type: 'lecture', day: 3, start: '16:00', end: '18:00', location: '84-128 Therapies Building', mode: 'in-person' },
+    { id: 'c07', courseCode: 'MATH7861', type: 'lecture', day: 4, start: '13:00', end: '14:00', location: '63-348', mode: 'in-person' },
+    { id: 'c08', courseCode: 'CSSE7030', type: 'applied', day: 4, start: '14:00', end: '16:00', location: '11A-101 ModWest', mode: 'in-person' },
+    { id: 'c09', courseCode: 'CSSE7030', type: 'practical', day: 4, start: '16:00', end: '18:00', location: '69-315 Building 69', mode: 'in-person' },
+    { id: 'c10', courseCode: 'CYBR7001', type: 'applied', day: 5, start: '08:00', end: '09:00', location: '47A-141', mode: 'in-person' },
+    { id: 'c11', courseCode: 'CYBR7002', type: 'applied', day: 5, start: '09:00', end: '10:00', location: '32-215 Gordon Greenwood Building', mode: 'in-person' },
+  ],
+  updatedAt: now,
 };
 
 // [kind, front, back, extra]
@@ -205,7 +239,7 @@ const CARDS = {
   ],
 };
 
-const docs = { 'meta/settings': settings };
+const docs = { 'meta/settings': settings, 'meta/timetable': timetable };
 for (const [code, c] of Object.entries(courses)) docs[`courses/${code}`] = { ...c, createdAt: now, updatedAt: now };
 
 let n = 0;
@@ -227,15 +261,15 @@ for (const [code, list] of Object.entries(CARDS)) {
 }
 
 const tasks = [
-  [today, null, '核對四科的評量日期：把 ECP 的 Assessment 表貼到「計畫 → 整理課程公告」', 20, 'other', 1, '倒數、計畫和衝刺建議都靠這些日期；目前是依過往課綱整理的。'],
+  [today, null, '核對四科的評量日期：把 ECP 的 Assessment 表貼到「計畫 → 整理課程公告」', 20, 'other', 1, '倒數、計畫和衝刺建議都靠這些日期。', true],
   [today, 'MATH7861', 'MATH7861：上傳最近一週的講義，看導讀，回答 5 題書僮問答', 45, 'study', 2, '期末考過往占 60% 且有門檻，越早開始越好。'],
   [today, null, '複習今日閃卡（書僮預設卡）', 15, 'review', 2, '先熟悉閃卡的用法；之後每天 15 分鐘。'],
   [addDays(today, 1), 'CYBR7002', 'CYBR7002：上傳一份講義，用「費曼講解」以英文講一個觀念', 40, 'english', 2, '理論課最需要把觀念講出來，同時練英文。'],
   [addDays(today, 1), 'CSSE7030', 'CSSE7030：出 5 題程式追蹤題（練習 → 出題）', 30, 'practice', 2, '期末考是紙筆作答，追蹤程式是最常考的題型。'],
   [addDays(today, 1), null, '請書僮排接下來兩週的計畫（寫上打工和作業時間）', 10, 'other', 2, '有了作業日期和你的時間，計畫才會準。'],
 ];
-tasks.forEach(([date, courseCode, title, minutes, kind, priority, why], i) => {
-  docs[`tasks/starter-t${i + 1}`] = { date, courseCode, title, minutes, kind, priority, why, done: false, order: i, source: 'starter', createdAt: now };
+tasks.forEach(([date, courseCode, title, minutes, kind, priority, why, done], i) => {
+  docs[`tasks/starter-t${i + 1}`] = { date, courseCode, title, minutes, kind, priority, why, done: !!done, doneAt: done ? now : null, order: i, source: 'starter', createdAt: now };
 });
 
 const out = join(dirname(fileURLToPath(import.meta.url)), 'seed.json');

@@ -104,7 +104,7 @@ function CoursesView({ params }) {
         return html`<button type="button" key=${c.code} class=${'course-card c-' + (c.color || 'pen')} onClick=${() => go('courses', { course: c.code })}>
           <span class="course-card__tab">${c.code}</span>
           <span class="course-card__name">${c.name}</span>
-          <span class="course-card__zh">${c.nameZh || ''} <span class="kind">${(COURSE_KINDS[c.kind] || {}).label || ''}</span></span>
+          <span class="course-card__zh">${c.nameZh || ''} <span class="kind">${(COURSE_KINDS[c.kind] || {}).label || ''}</span>${c.preview ? html`<span class="kind kind--pen">預習</span>` : null}</span>
           <span class="course-card__stats">
             <span><b>${mats.length}</b> 份講義</span><span><b>${cards.length}</b> 張卡片</span><span><b>${due}</b> 張到期</span>
           </span>
@@ -169,7 +169,10 @@ function CourseDetail({ code, params }) {
   useEffect(() => {
     setOpenMat(params.material || null);
     if (params.tab) setTab(params.tab);
-    if (params.upload) setUploading(true);
+    if (params.upload) {
+      setUploading(true);
+      setTab('materials');
+    }
   }, [Router.state.seq]);
   if (!c) return null;
   const mats = s.materials
@@ -196,6 +199,7 @@ function CourseDetail({ code, params }) {
       : html`
         <${Tabs} value=${tab} onChange=${setTab} label="課程分頁" tabs=${[
           { id: 'materials', label: '講義', count: mats.length },
+          { id: 'preview', label: c.preview ? '預習 ●' : '預習' },
           { id: 'assess', label: '評量與考試', count: (c.assessments || []).length },
           { id: 'method', label: '讀書方法' },
         ]} />
@@ -215,6 +219,7 @@ function CourseDetail({ code, params }) {
                   : null}
             </div>`
           : null}
+        ${tab === 'preview' ? html`<${CoursePreview} key=${Router.state.seq} course=${c} params=${params} />` : null}
         ${tab === 'assess' ? html`<${AssessmentEditor} course=${c} />` : null}
         ${tab === 'method' ? html`<${CourseMethods} course=${c} />` : null}
       `}
@@ -627,4 +632,189 @@ function CourseMethods({ course }) {
     <div class="method-grid">${group.methods.map((m) => html`<${MethodCard} key=${m.id} m=${m} course=${course} />`)}</div>
     <p class="muted small">英文的練法在「方法」頁。</p>
   </div>`;
+}
+
+/* ---------- 預習 ---------- */
+function TopicInput({ course, week }) {
+  const stored = topicFor(course, week);
+  const [v, setV] = useState(stored);
+  useEffect(() => setV(stored), [stored]);
+  const save = () => {
+    if (v.trim() === stored) return;
+    const rest = (course.schedule || []).filter((x) => Number(x.week) !== week);
+    if (v.trim()) rest.push({ week, topic: v.trim() });
+    rest.sort((a, b) => a.week - b.week);
+    Store.patch('courses', course.code, { schedule: rest, updatedAt: U.nowIso() });
+  };
+  return html`<label class="wk-topic" for=${`wt-${course.code}-${week}`}>
+    <span class="wk-topic__n">W${week}</span>
+    <input id=${`wt-${course.code}-${week}`} value=${v} placeholder="—" onInput=${(e) => setV(e.target.value)} onBlur=${save} />
+  </label>`;
+}
+
+function CoursePreview({ course, params }) {
+  const s = useStore();
+  const rt = useRuntime();
+  const ai = useAI();
+  const today = U.today();
+  const sem = s.settings.semester;
+  const [openId, setOpenId] = useState(params.preview || null);
+  const [busyWeek, setBusyWeek] = useState(null);
+  const [topics, setTopics] = useState({});
+  const [matPick, setMatPick] = useState({});
+  const upcoming = lectureWeeks(course.code, today, 21, s.timetable, sem);
+  const previews = s.previews.filter((p) => p.courseCode === course.code).sort((a, b) => b.week - a.week);
+  const mats = s.materials
+    .filter((m) => m.courseCode === course.code)
+    .sort((a, b) => (b.week || 0) - (a.week || 0));
+  const open = openId && previews.find((p) => p.id === openId);
+  const topicOf = (week) => (topics[week] ?? topicFor(course, week)) || '';
+  const matOf = (week) => {
+    if (matPick[week] !== undefined) return matPick[week];
+    const m = mats.find((x) => Number(x.week) === Number(week) && x.kind === 'lecture');
+    return m ? m.id : '';
+  };
+
+  const generate = (week, date) => {
+    setBusyWeek(week);
+    ai.run(async ({ signal, onProgress }) => {
+      const topic = topicOf(week).trim();
+      const material = matOf(week) ? Store.get('materials', matOf(week)) : null;
+      if (!topic && !material) throw new Error(`先填 W${week} 的主題，或上傳這週的投影片再選它。`);
+      if (topic && topic !== topicFor(course, week)) {
+        const rest = (course.schedule || []).filter((x) => Number(x.week) !== week);
+        rest.push({ week, topic });
+        rest.sort((a, b) => a.week - b.week);
+        await Store.patch('courses', course.code, { schedule: rest, updatedAt: U.nowIso() });
+      }
+      const guide = await AI.preview({ course, week, topic, date, material, signal, onProgress });
+      const id = `${course.code}-W${week}`;
+      await Store.set('previews', id, { courseCode: course.code, week, topic, date, materialId: material ? material.id : null, guide, createdAt: U.nowIso() });
+      setOpenId(id);
+      toast(`W${week} 預習準備好了`, 'ok');
+    }).finally(() => setBusyWeek(null));
+  };
+
+  if (open) return html`<${PreviewView} preview=${open} course=${course} onClose=${() => setOpenId(null)} />`;
+
+  return html`<div class="stack">
+    <label class="check"><input type="checkbox" id=${'pv-on-' + course.code} checked=${!!course.preview}
+      onChange=${(e) => Store.patch('courses', course.code, { preview: e.target.checked, updatedAt: U.nowIso() })} />
+      這門課要預習：講課前一天排預習任務（到「計畫 → 產生預習與課前任務」）</label>
+    <${AIGate} />
+    <${Section} title="接下來的講課" sub="有這週的投影片就選它；還沒發的話，填上主題也能先預習。">
+      ${upcoming.length
+        ? html`<ul class="prev-list">
+            ${upcoming.map((x) => {
+              const id = `${course.code}-W${x.week}`;
+              const has = previews.find((p) => p.id === id);
+              return html`<li key=${id} class=${U.cls('prev-row', Number(params.week) === x.week && 'is-target')}>
+                <div class="prev-row__when"><b>W${x.week}</b><span>${U.fmtDate(x.date)} ${x.cls.start}</span>${has ? html`<${Pill} tone="ok">已預習</${Pill}>` : null}</div>
+                <input id=${'pv-t-' + x.week} class="prev-row__topic" aria-label=${`W${x.week} 主題`} placeholder="這週主題（Blackboard 或 ECP 上看得到）"
+                  value=${topicOf(x.week)} onInput=${(e) => setTopics({ ...topics, [x.week]: e.target.value })} />
+                <select id=${'pv-m-' + x.week} aria-label="投影片" value=${matOf(x.week)} onChange=${(e) => setMatPick({ ...matPick, [x.week]: e.target.value })}>
+                  <option value="">（沒有投影片）</option>
+                  ${mats.map((m) => html`<option value=${m.id}>${m.week ? `W${m.week} ` : ''}${U.truncate(m.title, 40)}</option>`)}
+                </select>
+                <div class="row">
+                  ${has ? html`<${Btn} kind="ghost" size="sm" onClick=${() => setOpenId(id)}>看預習</${Btn}>` : null}
+                  <${Btn} kind=${has ? 'ghost' : 'primary'} size="sm" icon="spark" disabled=${ai.busy || rt.ai !== 'ready'} onClick=${() => generate(x.week, x.date)}>${has ? '重新產生' : '產生預習'}</${Btn}>
+                </div>
+              </li>`;
+            })}
+          </ul>`
+        : html`<p class="muted">接下來三週沒有這門課的講課${s.timetable.classes.length ? '' : html`（還沒輸入課表，<button type="button" class="link" onClick=${() => go('plan')}>到計畫頁輸入</button>）`}。</p>`}
+      <${Thinking} ai=${ai} label=${`書僮正在準備 W${busyWeek || ''} 的預習`} detail="大約 30-60 秒" />
+      <${AIError} ai=${ai} />
+    </${Section}>
+    ${previews.length
+      ? html`<${Section} title="預習紀錄">
+          <ul class="mat-list">${previews.map(
+            (p) => html`<li key=${p.id} class="mat"><button type="button" class="mat__main" onClick=${() => setOpenId(p.id)}>
+              <span class="mat__week">W${p.week}</span>
+              <span class="mat__text"><span class="mat__title">${p.guide.title_en}</span><span class="mat__meta">${p.guide.title_zh} · ${p.date ? U.fmtDate(p.date) : ''}</span></span>
+            </button></li>`
+          )}</ul>
+        </${Section}>`
+      : null}
+    <${Section} title="每週主題" sub="從 ECP 的 Learning activities 或 Blackboard 抄過來，離開欄位就會儲存。"
+      aside=${html`<${Btn} kind="ghost" size="sm" onClick=${() => go('plan', { parse: true })}>貼上 ECP 讓書僮整理</${Btn}>`}>
+      <div class="weeks-grid">${Array.from({ length: 13 }, (_, i) => html`<${TopicInput} key=${i + 1} course=${course} week=${i + 1} />`)}</div>
+    </${Section}>
+  </div>`;
+}
+
+function PreviewView({ preview: p, course, onClose }) {
+  const g = p.guide;
+  const [shown, setShown] = useState({});
+  const material = p.materialId && Store.get('materials', p.materialId);
+  const addTerms = async (terms) => {
+    const n = await addTermCards({ courseCode: course.code, id: p.materialId || null }, terms);
+    toast(n ? `加入 ${n} 張名詞卡` : '這些名詞都已經在卡片裡了', n ? 'ok' : 'info');
+  };
+  return html`<article class="material">
+    <div class="row between wrap">
+      <button type="button" class="link" onClick=${onClose}>← 回到預習</button>
+      <span class="muted small">${g.basis_zh}${g.minutes ? ` · 大約 ${g.minutes} 分鐘` : ''}</span>
+    </div>
+    <header class="material__head">
+      <p class="eyebrow">預習 · 第 ${p.week} 週${p.date ? ` · ${U.fmtDate(p.date)} 上課` : ''}</p>
+      <h2 class="material__title">${g.title_en}</h2>
+      ${g.title_zh ? html`<p class="material__zh">${g.title_zh}</p>` : null}
+    </header>
+    <section class="guide__block">
+      <h3 class="guide__h">This week <span>這週會學什麼</span></h3>
+      <p class="en-lg">${g.what_en}</p><p class="zh">${g.what_zh}</p>
+      ${g.why_en ? html`<p class="en">${g.why_en}</p><p class="zh">${g.why_zh}</p>` : null}
+      <${ExplainBtn} text=${g.what_en + ' ' + g.why_en} />
+    </section>
+    <div class="grid-2">
+      <section class="guide__block">
+        <h3 class="guide__h">Refresh first <span>先複習這些</span></h3>
+        <ul class="bilist">${g.prerequisites.map((x, i) => html`<li key=${i}><span class="en">${x.en}</span><span class="zh">${x.zh}</span></li>`)}</ul>
+      </section>
+      <section class="guide__block">
+        <h3 class="guide__h">Listen for <span>上課注意聽</span></h3>
+        <ul class="bilist bilist--check">${g.watch_for.map((x, i) => html`<li key=${i}><span class="en">${x.en}</span><span class="zh">${x.zh}</span></li>`)}</ul>
+      </section>
+    </div>
+    ${g.key_terms.length
+      ? html`<section class="guide__block">
+          <div class="row between wrap"><h3 class="guide__h">Key terms <span>關鍵名詞</span></h3>
+            <${Btn} kind="ghost" size="sm" icon="card" onClick=${() => addTerms(g.key_terms)}>全部加入閃卡</${Btn}></div>
+          <div class="table-wrap"><table class="terms">
+            <thead><tr><th>Term</th><th>中文</th><th>Definition · Example</th></tr></thead>
+            <tbody>${g.key_terms.map(
+              (t, i) => html`<tr key=${i}><td class="terms__term"><mark>${t.term}</mark></td><td>${t.zh}</td>
+                <td><div>${t.def_en}</div>${t.example_en ? html`<div class="muted small">e.g. ${t.example_en}</div>` : null}</td></tr>`
+            )}</tbody>
+          </table></div>
+        </section>`
+      : null}
+    ${g.warmup.length
+      ? html`<section class="guide__block">
+          <h3 class="guide__h">Warm-up <span>暖身題：先自己想，再看答案</span></h3>
+          <ol class="warmups">${g.warmup.map(
+            (w, i) => html`<li key=${i} class="warmup">
+              <${Bilingual} en=${w.q_en} zh=${w.q_zh} />
+              <${CodeBlock} code=${w.code} />
+              ${shown[i]
+                ? html`<div class="warmup__ans"><p class="en">${w.answer_en}</p>${w.answer_zh ? html`<p class="zh">${w.answer_zh}</p>` : null}</div>`
+                : html`<button type="button" class="link" onClick=${() => setShown({ ...shown, [i]: true })}>看答案</button>`}
+            </li>`
+          )}</ol>
+        </section>`
+      : null}
+    ${g.ask_in_class.length
+      ? html`<section class="guide__block">
+          <h3 class="guide__h">Ask in class <span>可以在課堂問</span></h3>
+          <ul class="bilist">${g.ask_in_class.map((q, i) => html`<li key=${i}><span class="en">${q}</span><${CopyBtn} text=${q} /></li>`)}</ul>
+        </section>`
+      : null}
+    <div class="row wrap">
+      <${Btn} kind="primary" icon="tutor"
+        onClick=${() => go('tutor', material ? { course: course.code, materials: [material.id] } : { course: course.code, focus: g.title_en })}>上完課：書僮問答</${Btn}>
+      <${Btn} kind="ghost" icon="upload" onClick=${() => go('courses', { course: course.code, upload: true })}>上傳這週投影片</${Btn}>
+    </div>
+  </article>`;
 }

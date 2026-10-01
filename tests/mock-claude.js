@@ -167,12 +167,28 @@
         { date: 'TOMORROW', course: 'CYBR7002', title: 'CYBR7002：用英文費曼講解 MFA', minutes: 30, kind: 'english', why: '練理論加英文' },
       ],
     },
+    preview: {
+      title_en: 'Recursion',
+      title_zh: '遞迴',
+      basis_zh: '依課程一般內容整理（還沒有投影片）',
+      what_en: 'This lecture shows how a function can call itself to solve a smaller version of the same problem.',
+      what_zh: '這堂課教你怎麼讓函式呼叫自己，去解同一個問題的較小版本。',
+      why_en: 'Recursion appears in the final exam and in tree-shaped data.',
+      why_zh: '遞迴會出現在期末考，也常用在樹狀資料。',
+      prerequisites: [{ en: 'How function calls and return values work', zh: '函式呼叫與回傳值' }],
+      key_terms: [{ term: 'base case', zh: '終止條件', def_en: 'The input where the function stops calling itself.', example_en: 'if n == 0: return 1' }],
+      watch_for: [{ en: 'How the call stack grows and shrinks', zh: '呼叫堆疊怎麼變長再變短' }],
+      warmup: [{ q_en: 'What does f(3) return?', q_zh: 'f(3) 回傳什麼？', code: 'def f(n):\n    if n == 0:\n        return 1\n    return n * f(n - 1)', answer_en: '6', answer_zh: '3 × 2 × 1 = 6' }],
+      ask_in_class: ['When should I use recursion instead of a loop?'],
+      minutes: 25,
+    },
     parse: {
       assessments: [
         { course: 'CSSE7030', name: 'Assignment 2', due: 'IN10', time: '15:00', weight: 25, kind: 'assignment', note: 'Gradescope' },
         { course: 'MATH7861', name: 'Final examination', due: null, time: '', weight: 60, kind: 'exam', note: 'hurdle' },
       ],
       tasks: [{ course: 'CSSE7030', title: 'CSSE7030：完成 A2 的 model 類別', due: 'IN10', priority: 1, minutes: 120, why: '最早截止' }],
+      schedule: [{ course: 'CSSE7030', week: 11, topic: 'Recursion' }],
       notes_zh: 'A2 需要參加面試才算通過。',
     },
   };
@@ -186,6 +202,7 @@
 
   function respond(p) {
     if (/Write a bilingual study guide/.test(p)) return JSON.stringify(R.summary);
+    if (/Write a short PREVIEW guide/.test(p)) return JSON.stringify(R.preview);
     if (/LEARNER'S ANSWER/.test(p)) return JSON.stringify(R.tutor);
     if (/Summarise this tutoring session/.test(p)) return JSON.stringify(R.recap);
     if (/Create a practice set/.test(p)) return JSON.stringify(R.quiz);

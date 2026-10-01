@@ -51,6 +51,7 @@ function watch(page, label) {
 async function newPage(browser, { mock = true, width = 1280, height = 900, scheme = 'light', seed = SEED } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, locale: 'zh-TW', timezoneId: 'Australia/Brisbane' });
   const page = await ctx.newPage();
+  await page.clock.setFixedTime(new Date('2026-10-01T09:00:00+10:00'));
   await routeAll(page);
   if (mock) {
     await page.addInitScript((s) => (window.__SEED__ = s), seed);
@@ -81,6 +82,9 @@ const noOverflow = async (page, label) => {
       await page.getByRole('heading', { name: '今天的書桌' }).waitFor();
       await page.locator('.count').first().waitFor();
       await page.getByText('核對四科的評量日期', { exact: false }).first().waitFor();
+      await page.locator('.classes').getByText('下次上課', { exact: false }).waitFor();
+      const cls = await page.locator('.classes .cls').allInnerTexts();
+      if (!cls.some((t) => /CSSE7030/.test(t) && /預習 W10/.test(t))) throw new Error('next classes wrong: ' + cls.join(' | '));
       await page.screenshot({ path: path.join(OUT, '01-home.png'), fullPage: true });
     });
 
@@ -205,6 +209,16 @@ const noOverflow = async (page, label) => {
       await page.locator('.history__row').first().waitFor();
     });
 
+    await step('timetable → preview / prep / recording tasks', async () => {
+      await nav('計畫');
+      await page.locator('.tt .tt__cls', { hasText: 'CSSE7030' }).first().waitFor();
+      await page.getByRole('button', { name: '產生預習與課前任務' }).click();
+      await page.getByText(/加入 19 項預習/).waitFor();
+      await page.getByText('CSSE7030：預習 W10（預習導讀＋暖身題）').first().waitFor();
+      await page.getByRole('button', { name: '產生預習與課前任務' }).click();
+      await page.getByText('這些任務都已經在清單裡了').waitFor();
+    });
+
     await step('AI plan → tasks; parse course info → assessments', async () => {
       await nav('計畫');
       await page.locator('.timeline .wk.is-now').waitFor();
@@ -220,7 +234,26 @@ const noOverflow = async (page, label) => {
       if (!a2 || !a2.due) throw new Error('A2 due date not merged: ' + JSON.stringify(a2));
       const exam = await page.evaluate(() => window.__db.get('courses/MATH7861').exam);
       if (!exam || exam.weight !== 60) throw new Error('exam not merged');
+      const sched = await page.evaluate(() => window.__db.get('courses/CSSE7030').schedule);
+      if (!sched || !sched.some((x) => x.week === 11 && x.topic === 'Recursion')) throw new Error('weekly topic not merged: ' + JSON.stringify(sched));
       await page.screenshot({ path: path.join(OUT, '07-plan.png'), fullPage: true });
+    });
+
+    await step('預習: guide for next week\'s lecture', async () => {
+      await nav('課程');
+      await page.locator('.course-card', { hasText: 'CSSE7030' }).click();
+      await page.getByRole('tab', { name: /預習/ }).click();
+      const row = page.locator('.prev-row', { hasText: 'W10' });
+      await row.locator('input').fill('Functions and recursion');
+      await row.getByRole('button', { name: '產生預習' }).click();
+      await page.getByRole('heading', { name: 'Recursion' }).waitFor();
+      await page.getByRole('button', { name: '看答案' }).click();
+      await page.getByText('3 × 2 × 1 = 6').waitFor();
+      await page.screenshot({ path: path.join(OUT, '07b-preview.png'), fullPage: true });
+      const saved = await page.evaluate(() => window.__db.get('previews/CSSE7030-W10'));
+      if (!saved || !saved.guide || saved.topic !== 'Functions and recursion') throw new Error('preview not saved: ' + JSON.stringify(saved));
+      await page.getByRole('button', { name: '← 回到預習' }).click();
+      await page.getByRole('heading', { name: '預習紀錄' }).waitFor();
     });
 
     await step('methods + settings export', async () => {

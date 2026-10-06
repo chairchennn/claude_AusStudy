@@ -134,8 +134,19 @@ const noOverflow = async (page, label) => {
       await page.screenshot({ path: path.join(OUT, '03-guide.png'), fullPage: true });
     });
 
+    // Maths material pages lead to 題型練習; Socratic questions are still there in the 書僮 tab when chosen.
+    const startSocratic = async (materialTitle) => {
+      await nav('書僮');
+      if (await page.getByRole('button', { name: '換一個' }).count()) await page.getByRole('button', { name: '換一個' }).click();
+      await page.locator('#tu-course').getByRole('button', { name: 'MATH7861' }).click();
+      await page.locator('.mode.is-on', { hasText: '自由提問' }).waitFor();
+      await page.locator('.pick__item', { hasText: materialTitle }).locator('input').check();
+      await page.locator('.mode', { hasText: '蘇格拉底問答' }).click();
+      await page.getByRole('button', { name: '開始', exact: true }).click();
+    };
+
     await step('Socratic tutor: answer, feedback with correction table, next question', async () => {
-      await page.getByRole('button', { name: '回答這題，開始問答' }).click();
+      await startSocratic('Week9');
       await page.getByText('Why is the base case necessary', { exact: false }).first().waitFor();
       await page.fill('#tutor-answer', 'base case is need because it is start');
       await page.getByRole('button', { name: '送出' }).click();
@@ -149,10 +160,7 @@ const noOverflow = async (page, label) => {
     });
 
     await step('tutor on a lecture without 導讀 offers guide-first start', async () => {
-      await nav('課程');
-      await page.locator('.course-card', { hasText: 'MATH7861' }).click();
-      await page.locator('.mat', { hasText: 'Authentication' }).click();
-      await page.getByRole('button', { name: '開始書僮問答' }).click();
+      await startSocratic('Authentication');
       await page.getByRole('heading', { name: '先讀導讀，再開始問答' }).waitFor();
       await page.getByRole('button', { name: '產生導讀並開始' }).click();
       await page.locator('.guide-mini').waitFor();
@@ -399,7 +407,18 @@ const noOverflow = async (page, label) => {
         await p.locator('.rate__btn').nth(2).click();
       }
       await p.getByRole('button', { name: '回到小考準備' }).click();
-      await p.locator('.qz-step.is-done', { hasText: '閃卡＋錯題' }).waitFor();
+      // Maths: flashcards are an optional extra, not one of the four prep steps.
+      await p.locator('.qz-extra', { hasText: '考前都複習過了' }).waitFor();
+      const order = await p.locator('.qz-step h3').allInnerTexts();
+      if (!/^投影片導讀/.test(order[0]) || order.slice(1).join(',') !== '題型練習,模擬小考,考前重點') throw new Error('math quiz steps: ' + order.join(','));
+      // 題型練習 for the tested week.
+      await p.getByRole('button', { name: '開始題型練習' }).click();
+      await p.locator('.drill', { hasText: 'W9（L24–26）' }).waitFor();
+      await p.getByRole('button', { name: '產生題型練習' }).click();
+      await p.locator('.drill-item', { hasText: '例題 1' }).waitFor();
+      const dcall = await p.evaluate(() => window.__sampleCalls.filter((c) => /SKILLS DRILL/.test(c.prompt || '')).slice(-1)[0]);
+      if (!dcall || !/SKILLS DRILL for W9（L24–26）/.test(dcall.prompt)) throw new Error('drill prompt should name the tested week');
+      await p.getByRole('button', { name: '← 回到小考準備' }).click();
       // Score of the last sitting (W9, on W8 content) counts toward best 8 of 12.
       const row = p.locator('.qz-scores tr', { hasText: '9/23' });
       await row.getByLabel('9/23 得分').fill('8');
@@ -434,6 +453,81 @@ const noOverflow = async (page, label) => {
       const inSem = await p.evaluate(() => window.__db.get('courses/MATH7861').assessments.find((a) => a.id === 'a-math-2').score);
       if (!inSem || inSem.got !== 25 || inSem.max !== 25) throw new Error('mid-semester score not saved: ' + JSON.stringify(inSem));
       await p.screenshot({ path: path.join(OUT, '14-grades.png'), fullPage: true });
+      await ctx.close();
+    });
+
+    await step('數學題型練習: 導讀 → 例題（附詳解）→ 基礎題 → 練習題, no Socratic questions', async () => {
+      const { ctx, page: p } = await newPage(browser, { time: '2026-10-06T15:30:00+10:00' });
+      watch(p, 'drill');
+      await p.goto('http://app.test/');
+      await p.locator('.rail__nav').getByRole('button', { name: '複習' }).click();
+      const card = p.locator('.rc', { hasText: 'MATH7861' });
+      await card.getByRole('button', { name: '上傳今天的投影片' }).click();
+      await p.setInputFiles('#up-file', path.join(FIX, 'Week9-induction-notes.txt'));
+      await p.getByRole('button', { name: '儲存 1 份' }).click();
+      await card.locator('.ms').waitFor();
+      const labels = await card.locator('.step__label').allInnerTexts();
+      if (labels.join(',') !== '導讀,例題,基礎題,練習題') throw new Error('math steps: ' + labels.join(','));
+      await card.getByRole('button', { name: '下一步：導讀' }).click();
+      await p.getByRole('button', { name: '產生導讀' }).click();
+      await p.getByRole('heading', { name: 'Mathematical Induction' }).waitFor();
+      // The guide leads on to the drill, not to Socratic questions.
+      if (await p.getByRole('button', { name: /開始問答|書僮問答/ }).count()) throw new Error('math guide should not offer Socratic questions');
+      await p.getByRole('button', { name: '開始題型練習' }).waitFor();
+      await p.getByRole('button', { name: '← 回到這天的複習' }).click();
+      await card.getByRole('button', { name: '下一步：例題' }).click();
+      await p.getByRole('button', { name: '產生題型練習' }).click();
+      // 例題: every one comes with its full worked solution.
+      await p.locator('.drill-item', { hasText: '例題 1' }).waitFor();
+      if ((await p.locator('.drill-item .drill-sol').count()) !== 3) throw new Error('each worked example should show its solution');
+      for (const n of [1, 2, 3]) {
+        const ex = p.locator('.drill-item', { hasText: `例題 ${n}` });
+        await ex.getByRole('button', { name: '我看懂了' }).click();
+        await ex.getByText('看懂了', { exact: true }).waitFor();
+      }
+      await p.getByRole('button', { name: /下一步：基礎題/ }).click();
+      // 基礎題: solve first; the solution appears only when checking.
+      const b1 = p.locator('.drill-item', { hasText: '基礎題 1' });
+      if (await b1.locator('.drill-sol').count()) throw new Error('basic problems should hide the solution until checked');
+      await b1.getByRole('button', { name: '看提示' }).click();
+      await b1.locator('.drill-hint').waitFor();
+      await b1.getByLabel('基礎題 1 你的作答').fill('Base case n = 1: 1 = 1. Assume P(k)...');
+      await b1.getByRole('button', { name: '對答案' }).click();
+      await b1.locator('.drill-sol').waitFor();
+      await b1.getByRole('button', { name: '我做對了' }).click();
+      const b2 = p.locator('.drill-item', { hasText: '基礎題 2' });
+      await b2.getByRole('button', { name: '對答案' }).click();
+      await b2.getByRole('button', { name: '還不熟' }).click();
+      await b2.getByText('還不熟 · 已進錯題本').waitFor();
+      for (const n of [3, 4]) {
+        const b = p.locator('.drill-item', { hasText: `基礎題 ${n}` });
+        await b.getByRole('button', { name: '對答案' }).click();
+        await b.getByRole('button', { name: '我做對了' }).click();
+        await b.getByText('做對了', { exact: true }).waitFor();
+      }
+      const mistake = await p.evaluate(() => [...window.__db.values()].find((v) => v && v.kind === 'mistake' && v.source && v.source.type === 'drill'));
+      if (!mistake || !/basic 2/.test(mistake.front)) throw new Error('還不熟 should put the problem in the mistake book');
+      await p.screenshot({ path: path.join(OUT, '15-drill.png'), fullPage: true });
+      await p.getByRole('button', { name: '← 回到這天的複習' }).click();
+      await card.locator('.step.is-done', { hasText: '例題' }).waitFor();
+      await card.locator('.step.is-done', { hasText: '基礎題' }).waitFor();
+      // 練習題: the real, graded practice.
+      await card.getByRole('button', { name: '下一步：練習題' }).click();
+      await p.getByRole('heading', { name: 'Induction and logic practice' }).waitFor();
+      const sessions = await p.evaluate(() => [...window.__db.keys()].filter((k) => k.startsWith('sessions/')).length);
+      if (sessions) throw new Error('math review should not start Socratic sessions');
+      // The tutor tab offers free questions for maths, with the drill one click away.
+      await p.locator('.rail__nav').getByRole('button', { name: '書僮' }).click();
+      await p.locator('#tu-course').getByRole('button', { name: 'MATH7861' }).click();
+      await p.locator('.mode.is-on', { hasText: '自由提問' }).waitFor();
+      await p.getByRole('button', { name: '到複習頁開始題型練習' }).waitFor();
+      // Phone width: the drill reads without sideways scrolling.
+      await p.setViewportSize({ width: 390, height: 844 });
+      await p.locator('.tabbar').getByRole('button', { name: '複習' }).click();
+      await p.locator('.rc', { hasText: 'MATH7861' }).locator('.step', { hasText: '例題' }).getByRole('button').click();
+      await p.locator('.drill-item', { hasText: '例題 1' }).waitFor();
+      await noOverflow(p, 'phone-drill');
+      await p.screenshot({ path: path.join(OUT, '15b-drill-phone.png'), fullPage: true });
       await ctx.close();
     });
 

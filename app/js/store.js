@@ -28,6 +28,7 @@ const COLLECTIONS = {
   days: { order: 'date', limit: 120 },
   previews: {},
   quizprep: {}, // one doc per weekly-quiz sitting: 考前重點 sheet and the score
+  drills: {}, // 題型練習 for maths: worked examples, then basics to try, per material or quiz week
 };
 const META_DOCS = ['settings', 'plan', 'timetable'];
 
@@ -44,6 +45,7 @@ const Store = (() => {
     days: [],
     previews: [],
     quizprep: [],
+    drills: [],
     settings: DEFAULT_SETTINGS,
     plan: null,
     timetable: { classes: [] },

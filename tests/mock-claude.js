@@ -167,7 +167,65 @@
         { date: 'TOMORROW', course: 'CYBR7002', title: 'CYBR7002：用英文費曼講解 MFA', minutes: 30, kind: 'english', why: '練理論加英文' },
       ],
     },
-    quizSheet: {
+    drill: {
+    title_en: 'Proof by induction: drill',
+    title_zh: '歸納法題型練習',
+    types: [
+      { en: 'Sum formula by induction', zh: '用歸納法證明求和公式' },
+      { en: 'Divisibility by induction', zh: '用歸納法證明整除' },
+    ],
+    examples: [
+      {
+        type_en: 'Sum formula by induction',
+        prompt_en: 'Prove that 1 + 3 + … + (2n − 1) = n² for all n ≥ 1.',
+        prompt_zh: '證明前 n 個奇數的和是 n²。',
+        steps: [
+          { en: 'Let P(n) be 1 + 3 + … + (2n − 1) = n².', why_zh: '先寫出要證明的命題' },
+          { en: 'Base case: n = 1 gives 1 = 1².', why_zh: '驗證最小的 n' },
+          { en: 'Assume P(k) for some k ≥ 1.', why_zh: '歸納假設' },
+          { en: 'Then 1 + … + (2k − 1) + (2k + 1) = k² + 2k + 1 = (k + 1)², so P(k + 1) holds.', why_zh: '用歸納假設替換前 k 項' },
+        ],
+        answer_en: 'P(n) holds for all n ≥ 1.',
+        tip_zh: '加上下一項後，湊成 (k + 1) 的形式。',
+      },
+      {
+        type_en: 'Divisibility by induction',
+        prompt_en: 'Prove that 3 divides 4ⁿ − 1 for all n ≥ 1.',
+        prompt_zh: '證明 4ⁿ − 1 可以被 3 整除。',
+        steps: [
+          { en: 'Base case: 4¹ − 1 = 3.', why_zh: '驗證 n = 1' },
+          { en: 'Assume 4ᵏ − 1 = 3m for an integer m.', why_zh: '把「整除」寫成等式' },
+          { en: '4ᵏ⁺¹ − 1 = 4·4ᵏ − 1 = 4(3m + 1) − 1 = 3(4m + 1).', why_zh: '代入歸納假設' },
+        ],
+        answer_en: '3 | 4ⁿ − 1 for all n ≥ 1.',
+        tip_zh: '整除題先把假設寫成 = 3m。',
+      },
+      {
+        type_en: 'Sum formula by induction',
+        prompt_en: 'Prove that 2 + 4 + … + 2n = n(n + 1).',
+        prompt_zh: '證明前 n 個偶數的和是 n(n + 1)。',
+        steps: [
+          { en: 'Base case: 2 = 1·2.', why_zh: '驗證 n = 1' },
+          { en: 'Assume 2 + … + 2k = k(k + 1).', why_zh: '歸納假設' },
+          { en: 'Add 2(k + 1): k(k + 1) + 2(k + 1) = (k + 1)(k + 2).', why_zh: '提出公因式 (k + 1)' },
+        ],
+        answer_en: 'The formula holds for all n ≥ 1.',
+        tip_zh: '提出公因式最快。',
+      },
+    ],
+    basics: [1, 2, 3, 4].map((i) => ({
+      type_en: i % 2 ? 'Sum formula by induction' : 'Divisibility by induction',
+      prompt_en: i % 2 ? `Prove that 1 + 2 + … + n = n(n + 1)/2 (basic ${i}).` : `Prove that 2 divides n² + n (basic ${i}).`,
+      prompt_zh: '基礎練習',
+      hint_zh: '先寫出 P(k)，再加上下一項。',
+      steps: [
+        { en: 'Check the base case.', why_zh: '最小的 n' },
+        { en: 'Assume P(k) and show P(k + 1).', why_zh: '歸納步驟' },
+      ],
+      answer_en: 'True for all n ≥ 1.',
+    })),
+  },
+  quizSheet: {
     title_en: 'Proof by induction: quiz sheet',
     title_zh: '數學歸納法考前重點',
     scope_zh: '依 W9 投影片整理：歸納法證明與遞迴定義',
@@ -230,6 +288,7 @@
     if (/Write a bilingual study guide/.test(p)) return JSON.stringify(R.summary);
     if (/Write a short PREVIEW guide/.test(p)) return JSON.stringify(R.preview);
     if (/LAST-MINUTE REVIEW SHEET/.test(p)) return JSON.stringify(R.quizSheet);
+    if (/Build a SKILLS DRILL/.test(p)) return JSON.stringify(R.drill);
     if (/LEARNER'S ANSWER/.test(p)) return JSON.stringify(R.tutor);
     if (/Summarise this tutoring session/.test(p)) return JSON.stringify(R.recap);
     if (/Create a practice set/.test(p)) return JSON.stringify(R.quiz);

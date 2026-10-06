@@ -724,5 +724,46 @@ Counts: must_know 4-7, definitions 4-8, rules 2-6, patterns 2-4 (steps 3-6 each)
     };
   }
 
-  return { profile, preview, quizSheet, summarize, tutorTurn, openingQuestion, recap, chat, explain, transcribe, generateQuiz, grade, plan, parseInfo, TYPE_RULES };
+  /* ---------- 題型練習 / skills drill (maths): worked examples, then easy problems to try ---------- */
+  async function drill({ course, materials, scope, signal, onProgress }) {
+    const budget = Math.floor(40000 / Math.max(1, materials.length));
+    const blocks = [];
+    for (const m of materials) blocks.push(materialBlock(m, Extract.sampleEvenly(await Store.getText(m.id), budget)));
+    const prompt = `${profile()}
+
+${courseBlock(course)}
+
+TASK
+Build a SKILLS DRILL${scope ? ` for ${scope}` : ''}. For this course the learner does NOT want Socratic questioning; they want to become fluent at the standard question types by first studying fully worked solutions, then doing easy problems of the same types themselves.
+Stage 1 "examples": 3 worked examples. Each is an easy, typical problem with a complete step-by-step solution written the way a marker expects: one line per step, each with a short Traditional Chinese note on why that step is done.
+Stage 2 "basics": 4 easy problems of the same types (one per question type where possible, different numbers or objects from the examples), for the learner to solve. Each has a hint that does not give the answer away, and a complete step-by-step solution to compare against.
+Cover the main question types of the material, in the order they appear. Keep the numbers and objects small so each problem takes 2-5 minutes. Write maths in Unicode, never LaTeX.
+${blocks.length ? `${NOTE_EXTRACTED}\n${blocks.join('\n\n')}` : 'No slides are available: use the standard content of this topic in a course like this.'}
+
+Return ONLY one JSON object:
+{
+  "title_en": "short topic title",
+  "title_zh": "中文標題",
+  "types": [{"en": "question type", "zh": "題型"}],
+  "examples": [{"type_en": "question type", "prompt_en": "the problem", "prompt_zh": "題目的中文翻譯（幫助閱讀，不給答案）", "steps": [{"en": "one step of the solution", "why_zh": "為什麼這樣做"}], "answer_en": "the final answer", "tip_zh": "同類題的關鍵（一句話）"}],
+  "basics": [{"type_en": "question type", "prompt_en": "the problem", "prompt_zh": "題目的中文翻譯", "hint_zh": "提示（不能直接給答案）", "steps": [{"en": "one step", "why_zh": "為什麼"}], "answer_en": "the final answer"}]
+}
+Counts: types 2-4, examples exactly 3 (steps 3-7 each), basics exactly 4 (steps 2-6 each).`;
+    const r = await call(prompt, { tier: 'default', signal, onProgress });
+    const steps = (x) => arr(x).map((st) => (typeof st === 'string' ? { en: st, why_zh: '' } : { en: str(st && st.en), why_zh: str(st && st.why_zh) })).filter((st) => st.en);
+    const item = (x) => ({ type_en: str(x.type_en), prompt_en: str(x.prompt_en), prompt_zh: str(x.prompt_zh), steps: steps(x.steps), answer_en: str(x.answer_en) });
+    return {
+      title_en: str(r.title_en) || scope || '',
+      title_zh: str(r.title_zh),
+      types: arr(r.types).map(pair).filter((t) => t.en),
+      examples: arr(r.examples)
+        .map((x) => ({ ...item(x), tip_zh: str(x.tip_zh) }))
+        .filter((x) => x.prompt_en && x.steps.length),
+      basics: arr(r.basics)
+        .map((x) => ({ ...item(x), hint_zh: str(x.hint_zh) }))
+        .filter((x) => x.prompt_en && x.steps.length),
+    };
+  }
+
+  return { profile, preview, quizSheet, drill, summarize, tutorTurn, openingQuestion, recap, chat, explain, transcribe, generateQuiz, grade, plan, parseInfo, TYPE_RULES };
 })();

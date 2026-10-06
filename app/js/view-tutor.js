@@ -84,7 +84,10 @@ function TutorSetup({ params, onStart }) {
   const courses = Store.courses();
   const [course, setCourse] = useState(params.course || (courses[0] && courses[0].code) || '');
   const [picked, setPicked] = useState(params.materials || []);
-  const [mode, setMode] = useState(params.mode || 'socratic');
+  // Maths is learnt by drilling problem types (題型練習), so here it defaults to free questions instead of Socratic ones.
+  const defaultMode = (code) => ((Store.course(code) || {}).kind === 'math' ? 'chat' : 'socratic');
+  const [mode, setMode] = useState(params.mode || defaultMode(course));
+  const isMath = (Store.course(course) || {}).kind === 'math';
   const [concept, setConcept] = useState('');
   useEffect(() => {
     if (!course && courses[0]) setCourse(courses[0].code);
@@ -116,10 +119,16 @@ function TutorSetup({ params, onStart }) {
           <div class="chips" id="tu-course">
             ${courses.map(
               (c) => html`<button type="button" key=${c.code} class=${U.cls('chip-btn', 'c-' + (c.color || 'pen'), course === c.code && 'is-on')}
-                onClick=${() => (setCourse(c.code), setPicked([]))}>${c.code}</button>`
+                onClick=${() => (setCourse(c.code), setPicked([]), setMode(defaultMode(c.code)))}>${c.code}</button>`
             )}
           </div>
         </${Field}>
+        ${isMath
+          ? html`<div class="notice">
+              <span>數學課用「題型練習」最有效：先看附完整解答的例題，再自己做基礎題，最後正式練習。這裡適合問看不懂的地方。</span>
+              <${Btn} kind="ghost" size="sm" icon="practice" onClick=${() => go('review', { tab: 'day' })}>到複習頁開始題型練習</${Btn}>
+            </div>`
+          : null}
         <div class="field">
           <span class="field__label">講義（可複選；不選就用整科的導讀）</span>
           ${mats.length
@@ -431,7 +440,8 @@ function Recap({ session, onNew }) {
 
 function TutorChat({ session, course, mats, onExit }) {
   const ai = useAI();
-  const [q, setQ] = useState('');
+  // Opened from a worked example: start the question with the problem.
+  const [q, setQ] = useState(session.concept && !(session.chat || []).length ? `這題我有一步看不懂：\n${session.concept}\n\n我卡在：` : '');
   const [stream, setStream] = useState('');
   const chat = session.chat || [];
   const bottom = useRef(null);

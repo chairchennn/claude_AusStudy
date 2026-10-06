@@ -3690,3 +3690,142 @@ details.tgroup > summary {
     align-self: center;
   }
 }
+
+/* ---------- 題型練習 (maths drill) ---------- */
+.drill-stages {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.drill-stage button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  cursor: pointer;
+}
+.drill-stage button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.drill-stage button > span:last-child {
+  display: grid;
+  gap: 0.05rem;
+  min-width: 0;
+}
+.drill-stage.is-on button {
+  border-color: var(--pen);
+  box-shadow: 0 0 0 1px var(--pen);
+}
+.drill-stage.is-done .step__n {
+  background: var(--ok);
+  color: var(--sheet);
+}
+.drill-stage.is-on .step__n {
+  background: var(--pen);
+  color: var(--pen-ink);
+}
+@media (max-width: 520px) {
+  .drill-stage button .muted {
+    display: none;
+  }
+}
+.drill-list {
+  list-style: none;
+  display: grid;
+  gap: 0.9rem;
+}
+.drill-item {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1rem 1.1rem;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--r-md);
+  min-width: 0;
+}
+.drill-item.is-done {
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--rule));
+}
+.drill-item.is-again {
+  border-color: color-mix(in srgb, var(--warn) 55%, var(--rule));
+}
+.drill-item__type {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+.drill-item textarea {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+}
+.drill-sol {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem 0.9rem;
+  background: var(--sheet-2);
+  border-radius: var(--r-sm);
+  min-width: 0;
+}
+.drill-sol__label {
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  color: var(--ok);
+}
+.drill-steps {
+  padding-left: 1.3rem;
+  display: grid;
+  gap: 0.45rem;
+}
+.drill-steps li {
+  display: grid;
+  gap: 0.1rem;
+  overflow-wrap: anywhere;
+}
+.drill-why {
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.drill-answer {
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--rule);
+  overflow-wrap: anywhere;
+}
+.drill-answer b {
+  margin-right: 0.4rem;
+  color: var(--ok);
+}
+.drill-tip,
+.drill-hint {
+  font-size: var(--fs-sm);
+  color: var(--ink-2);
+}
+.drill-hint {
+  padding: 0.45rem 0.6rem;
+  background: var(--mark-soft);
+  border-radius: var(--r-sm);
+}
+.qz-extra {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--rule);
+  border-radius: var(--r-md);
+}
+.qz-extra__h {
+  font-size: var(--fs-md);
+  font-weight: 700;
+}
+.drill-item > .pill,
+.drill-item > .link {
+  justify-self: start;
+}

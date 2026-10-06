@@ -443,7 +443,9 @@ function MaterialView({ material: m, course, onClose, backLabel = '← 回到講
   const [text, setText] = useState(null);
   const [edit, setEdit] = useState(false);
   const [meta, setMeta] = useState({ title: m.title, kind: m.kind, week: m.week || '' });
+  const [drillStage, setDrillStage] = useState(null);
   const sm = m.summary;
+  const math = course.kind === 'math';
 
   const generate = () =>
     ai.run(async ({ signal, onProgress }) => {
@@ -476,6 +478,10 @@ function MaterialView({ material: m, course, onClose, backLabel = '← 回到講
     setEdit(false);
   };
 
+  if (drillStage)
+    return html`<${DrillView} key=${m.id} course=${course} materials=${[m]} drillId=${drillIdForMaterial(m.id)} scope=${m.title} stage=${drillStage}
+      backLabel="← 回到導讀" onClose=${() => setDrillStage(null)} />`;
+
   return html`<article class="material">
     <div class="row between wrap">
       <button type="button" class="link" onClick=${onClose}>${backLabel}</button>
@@ -500,7 +506,9 @@ function MaterialView({ material: m, course, onClose, backLabel = '← 回到講
     </header>
 
     <div class="row wrap">
-      <${Btn} kind="primary" icon="tutor" onClick=${() => go('tutor', { course: course.code, materials: [m.id] })}>開始書僮問答</${Btn}>
+      ${math
+        ? html`<${Btn} kind="primary" icon="practice" onClick=${() => setDrillStage('examples')}>題型練習：例題 → 基礎題</${Btn}>`
+        : html`<${Btn} kind="primary" icon="tutor" onClick=${() => go('tutor', { course: course.code, materials: [m.id] })}>開始書僮問答</${Btn}>`}
       <${Btn} kind="ghost" icon="practice" onClick=${() => go('practice', { course: course.code, materials: [m.id], tab: 'quiz' })}>用這份出題</${Btn}>
       <${Btn} kind="ghost" icon="courses" onClick=${loadText}>${showText ? '收起原文' : '看原文'}</${Btn}>
     </div>
@@ -516,11 +524,11 @@ function MaterialView({ material: m, course, onClose, backLabel = '← 回到講
           <${Thinking} ai=${ai} label="書僮正在讀講義" detail="長的講義可能要 1-2 分鐘" />
           <${AIError} ai=${ai} onRetry=${generate} />
         </div>`
-      : html`<${GuideView} sm=${sm} material=${m} onRegenerate=${generate} ai=${ai} onAddTerms=${addAllTerms} />`}
+      : html`<${GuideView} sm=${sm} material=${m} onRegenerate=${generate} ai=${ai} onAddTerms=${addAllTerms} onDrill=${math ? () => setDrillStage('examples') : null} />`}
   </article>`;
 }
 
-function GuideView({ sm, material, onRegenerate, ai, onAddTerms }) {
+function GuideView({ sm, material, onRegenerate, ai, onAddTerms, onDrill = null }) {
   const [added, setAdded] = useState({});
   const addOne = async (t) => {
     const n = await addTermCards(material, [t]);
@@ -575,7 +583,13 @@ function GuideView({ sm, material, onRegenerate, ai, onAddTerms }) {
           <ul class="bilist">${sm.exam_angles.map((x, i) => html`<li key=${i}><span class="en">${x.en}</span><span class="zh">${x.zh}</span></li>`)}</ul>
         </section>`
       : null}
-    ${sm.first_question
+    ${onDrill
+      ? html`<section class="guide__block guide__q">
+          <h3 class="guide__h">Next <span>下一步：題型練習</span></h3>
+          <p>先看 3 題附完整解答的例題，再自己做 4 題簡單的同類題、對詳解，最後才是正式練習。</p>
+          <div class="row"><${Btn} kind="primary" icon="practice" onClick=${onDrill}>開始題型練習</${Btn}></div>
+        </section>`
+      : sm.first_question
       ? html`<section class="guide__block guide__q">
           <h3 class="guide__h">Start thinking <span>先想想看</span></h3>
           <${Bilingual} en=${sm.first_question.en} zh=${sm.first_question.zh} />

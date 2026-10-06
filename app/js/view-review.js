@@ -1,6 +1,7 @@
 /* view-review.js — 複習: review each class the day it happens, keep up with the week, and get ready for weekly quizzes.
-   Upload the slides for a class, then work through four steps: 導讀 → 問答 → 閃卡 → 小測驗.
-   Progress is derived from what already exists (summary, tutor answers, cards, graded quizzes). */
+   Upload the slides for a class, then work through four steps: 導讀 → 問答 → 閃卡 → 小測驗; maths drills problem types
+   instead of Socratic questions: 導讀 → 例題 → 基礎題 → 練習題.
+   Progress is derived from what already exists (summary, tutor answers, cards, drills, graded quizzes). */
 
 const REVIEW_STEPS = [
   { id: 'guide', label: '導讀', hint: '先看這份投影片在講什麼、要學會什麼' },
@@ -8,20 +9,31 @@ const REVIEW_STEPS = [
   { id: 'cards', label: '閃卡', hint: '把關鍵名詞加入閃卡' },
   { id: 'quiz', label: '小測驗', hint: '用這份投影片出 5 題並交卷' },
 ];
+const MATH_STEPS = [
+  { id: 'guide', label: '導讀', hint: '先看這份投影片在講什麼、有哪些題型' },
+  { id: 'examples', label: '例題', hint: '看懂 3 題附完整解答的例題' },
+  { id: 'basics', label: '基礎題', hint: '自己做 4 題簡單的同類題，再對詳解' },
+  { id: 'quiz', label: '練習題', hint: '正式練習 6 題並交卷批改' },
+];
 const QA_TARGET = 3;
+const reviewStepsFor = (course) => (course && course.kind === 'math' ? MATH_STEPS : REVIEW_STEPS);
 
 function materialProgress(m, s = Store.state) {
+  const list = reviewStepsFor(s.courses.find((c) => c.code === m.courseCode));
   const turns = s.sessions
     .filter((x) => (x.materialIds || []).includes(m.id))
     .reduce((n, x) => n + (x.turns || []).filter((t) => t.fb).length, 0);
+  const dp = drillProgress(s.drills.find((d) => d.id === drillIdForMaterial(m.id)));
   const steps = {
     guide: !!m.summary,
     qa: turns >= QA_TARGET,
     cards: s.cards.some((c) => c.source && c.source.materialId === m.id),
+    examples: dp.examples,
+    basics: dp.basics,
     quiz: s.quizzes.some((q) => q.status === 'graded' && (q.materialIds || []).includes(m.id)),
   };
-  const done = REVIEW_STEPS.filter((x) => steps[x.id]).length;
-  return { steps, turns, done, total: REVIEW_STEPS.length, next: REVIEW_STEPS.find((x) => !steps[x.id]) || null };
+  const done = list.filter((x) => steps[x.id]).length;
+  return { list, steps, turns, drill: dp, done, total: list.length, next: list.find((x) => !steps[x.id]) || null };
 }
 
 const nowMinutes = () => {
@@ -34,10 +46,14 @@ const classStarted = (date, cls) => date < U.today() || (date === U.today() && n
 const materialsForClass = (s, date, cls) =>
   s.materials.filter((m) => m.classDate === date && m.courseCode === cls.courseCode && (!m.classId || m.classId === cls.id));
 
-async function runReviewStep(step, m, openMaterial) {
+async function runReviewStep(step, m, openMaterial, openDrill) {
   if (step === 'guide') return openMaterial(m.id);
+  if (step === 'examples' || step === 'basics') return openDrill(m.id, step);
   if (step === 'qa') return go('tutor', { course: m.courseCode, materials: [m.id], resume: true });
-  if (step === 'quiz') return go('practice', { tab: 'quiz', course: m.courseCode, materials: [m.id], count: 5, auto: true });
+  if (step === 'quiz') {
+    const math = (Store.course(m.courseCode) || {}).kind === 'math';
+    return go('practice', { tab: 'quiz', course: m.courseCode, materials: [m.id], count: math ? 6 : 5, auto: true });
+  }
   if (step === 'cards') {
     if (!m.summary) return toast('先完成導讀，才有關鍵名詞可以加。', 'warn');
     const n = await addTermCards(m, m.summary.key_terms);
@@ -45,7 +61,7 @@ async function runReviewStep(step, m, openMaterial) {
   }
 }
 
-function MaterialSteps({ m, onOpen }) {
+function MaterialSteps({ m, onOpen, onDrill }) {
   const s = useStore();
   const p = materialProgress(m, s);
   return html`<div class=${U.cls('ms', !p.next && 'is-done')}>
@@ -54,24 +70,30 @@ function MaterialSteps({ m, onOpen }) {
       <span class="muted small">${MATERIAL_KINDS[m.kind] || ''} · ${p.done}/${p.total}</span>
     </div>
     <ol class="steps">
-      ${REVIEW_STEPS.map((st, i) => {
+      ${p.list.map((st, i) => {
         const done = p.steps[st.id];
         const locked = st.id === 'cards' && !m.summary;
+        const count =
+          done ? ''
+          : st.id === 'qa' && p.turns ? ` ${p.turns}/${QA_TARGET}`
+          : st.id === 'examples' && p.drill.seen ? ` ${p.drill.seen}/3`
+          : st.id === 'basics' && p.drill.marked ? ` ${p.drill.marked}/4`
+          : '';
         return html`<li key=${st.id} class=${U.cls('step', done && 'is-done', p.next && p.next.id === st.id && 'is-next')}>
-          <button type="button" class="step__btn" title=${st.hint} disabled=${locked} onClick=${() => runReviewStep(st.id, m, onOpen)}>
+          <button type="button" class="step__btn" title=${st.hint} disabled=${locked} onClick=${() => runReviewStep(st.id, m, onOpen, onDrill)}>
             <span class="step__n">${done ? '✓' : i + 1}</span>
-            <span class="step__label">${st.label}${st.id === 'qa' && !done && p.turns ? ` ${p.turns}/${QA_TARGET}` : ''}</span>
+            <span class="step__label">${st.label}${count}</span>
           </button>
         </li>`;
       })}
     </ol>
     ${p.next
-      ? html`<${Btn} kind="primary" size="sm" icon="right" onClick=${() => runReviewStep(p.next.id, m, onOpen)}>下一步：${p.next.label}</${Btn}>`
+      ? html`<${Btn} kind="primary" size="sm" icon="right" onClick=${() => runReviewStep(p.next.id, m, onOpen, onDrill)}>下一步：${p.next.label}</${Btn}>`
       : html`<${Pill} tone="ok">這份複習完成</${Pill}>`}
   </div>`;
 }
 
-function ClassReviewCard({ date, cls, uploading, setUploading, onOpen }) {
+function ClassReviewCard({ date, cls, uploading, setUploading, onOpen, onDrill }) {
   const s = useStore();
   const c = Store.course(cls.courseCode);
   if (!c) return null;
@@ -99,7 +121,7 @@ function ClassReviewCard({ date, cls, uploading, setUploading, onOpen }) {
       <span class="spacer"></span>
       ${status}
     </header>
-    ${linked.map((m) => html`<${MaterialSteps} key=${m.id} m=${m} onOpen=${onOpen} />`)}
+    ${linked.map((m) => html`<${MaterialSteps} key=${m.id} m=${m} onOpen=${onOpen} onDrill=${onDrill} />`)}
     ${!linked.length && loose.length
       ? html`<div class="rc__suggest">
           <span class="muted small">W${week} 已經上傳過：</span>
@@ -122,6 +144,14 @@ function ClassReviewCard({ date, cls, uploading, setUploading, onOpen }) {
   </li>`;
 }
 
+/** The 題型練習 of one material, shown in place of the review list. */
+function MaterialDrill({ m, stage, backLabel, onClose }) {
+  const c = Store.course(m.courseCode);
+  if (!c) return null;
+  return html`<${DrillView} key=${m.id + stage} course=${c} materials=${[m]} drillId=${drillIdForMaterial(m.id)} scope=${m.title} stage=${stage}
+    backLabel=${backLabel} onClose=${onClose} />`;
+}
+
 function DayReview({ params }) {
   const s = useStore();
   const sem = s.settings.semester;
@@ -139,6 +169,7 @@ function DayReview({ params }) {
   const [date, setDate] = useState(() => params.date || nearest());
   const [uploading, setUploading] = useState(null);
   const [openMat, setOpenMat] = useState(null);
+  const [drillOf, setDrillOf] = useState(null);
   useEffect(() => {
     // The timetable arrives from the cloud after the first render.
     if (!params.date && date === today && !classesOn(today, tt, sem).length) setDate(nearest());
@@ -149,6 +180,8 @@ function DayReview({ params }) {
     const c = m && Store.course(m.courseCode);
     if (m && c) return html`<${MaterialView} material=${m} course=${c} backLabel="← 回到這天的複習" onClose=${() => setOpenMat(null)} />`;
   }
+  const drillMat = drillOf && Store.get('materials', drillOf.id);
+  if (drillMat) return html`<${MaterialDrill} m=${drillMat} stage=${drillOf.stage} backLabel="← 回到這天的複習" onClose=${() => setDrillOf(null)} />`;
 
   const classes = classesOn(date, tt, sem);
   const home = nearest();
@@ -183,7 +216,8 @@ function DayReview({ params }) {
             <span class="muted small">已上課 ${started} 堂 · 已上傳投影片 ${uploaded} 堂</span>
           </div>
           <ul class="review-classes">
-            ${classes.map((cls) => html`<${ClassReviewCard} key=${cls.id} date=${date} cls=${cls} uploading=${uploading} setUploading=${setUploading} onOpen=${setOpenMat} />`)}
+            ${classes.map((cls) => html`<${ClassReviewCard} key=${cls.id} date=${date} cls=${cls} uploading=${uploading} setUploading=${setUploading} onOpen=${setOpenMat}
+              onDrill=${(id, stage) => setDrillOf({ id, stage })} />`)}
           </ul>`
         : html`<${Empty} icon="plan" title="這天沒有課">用左右箭頭切換到上課日。</${Empty}>`}
     <aside class="tip">
@@ -207,12 +241,15 @@ function WeekReview({ params }) {
   const [week, setWeek] = useState(Number(params.week) || current);
   const [uploading, setUploading] = useState(null);
   const [openMat, setOpenMat] = useState(null);
+  const [drillOf, setDrillOf] = useState(null);
 
   if (openMat) {
     const m = Store.get('materials', openMat);
     const c = m && Store.course(m.courseCode);
     if (m && c) return html`<${MaterialView} material=${m} course=${c} backLabel="← 回到這週的複習" onClose=${() => setOpenMat(null)} />`;
   }
+  const drillMat = drillOf && Store.get('materials', drillOf.id);
+  if (drillMat) return html`<${MaterialDrill} m=${drillMat} stage=${drillOf.stage} backLabel="← 回到這週的複習" onClose=${() => setDrillOf(null)} />`;
 
   const wk = teaching.find((w) => w.week === week);
   const days = wk ? Array.from({ length: 7 }, (_, i) => U.addDays(wk.start, i)) : [];
@@ -258,7 +295,9 @@ function WeekReview({ params }) {
                 <span class="muted small">${[...counts].map(([type, xs]) => { const label = CLASS_TYPES[type] || type; return `${xs.length} 堂${/^[A-Za-z]/.test(label) ? ' ' : ''}${label}`; }).join('、') || '這週沒有課'}</span>
                 ${mats.length ? html`<span class="wc__prog small">複習 ${U.sum(prog.map((p) => p.done))}/${U.sum(prog.map((p) => p.total))}</span>` : null}
               </header>
-              ${mats.length ? mats.map((m) => html`<${MaterialSteps} key=${m.id} m=${m} onOpen=${setOpenMat} />`) : html`<p class="muted small">還沒有 W${week} 的投影片。</p>`}
+              ${mats.length
+                ? mats.map((m) => html`<${MaterialSteps} key=${m.id} m=${m} onOpen=${setOpenMat} onDrill=${(id, stage) => setDrillOf({ id, stage })} />`)
+                : html`<p class="muted small">還沒有 W${week} 的投影片。</p>`}
               ${uploading === c.code
                 ? html`<${UploadPanel} course=${c} defaults=${{ week, kind: 'lecture' }} onDone=${() => setUploading(null)} />`
                 : html`<div class="row wrap">
@@ -283,6 +322,14 @@ const QUIZ_STEPS = [
   { id: 'mock', label: '模擬小考' },
   { id: 'cards', label: '閃卡＋錯題' },
 ];
+// Maths: drill the problem types first (worked examples, then easy ones), then the mock; the sheet is for the morning.
+const QUIZ_STEPS_MATH = [
+  { id: 'slides', label: '投影片導讀' },
+  { id: 'drill', label: '題型練習' },
+  { id: 'mock', label: '模擬小考' },
+  { id: 'sheet', label: '考前重點' },
+];
+const quizStepsFor = (course) => (course && course.kind === 'math' ? QUIZ_STEPS_MATH : QUIZ_STEPS);
 
 /** What exists for one sitting: the slides it covers, the 考前重點 sheet, mock quizzes, cards, and the four steps. */
 function quizPrepState(course, sit, s = Store.state) {
@@ -301,14 +348,18 @@ function quizPrepState(course, sit, s = Store.state) {
   // Reviewed in the three days before the quiz counts as revised for it.
   const since = U.addDays(sit.date, -3);
   const fresh = cards.filter((k) => !(k.srs && k.srs.last && k.srs.last >= since));
+  const drillId = drillIdForWeek(course.code, sit.covers);
+  const drill = drillProgress(s.drills.find((d) => d.id === drillId));
   const steps = {
     slides: study.length > 0 && study.every((m) => !!m.summary),
     sheet: !!(prep && prep.sheet),
     mock: graded.length > 0,
     cards: cards.length > 0 && !fresh.length,
+    drill: drill.examples && drill.basics,
   };
-  const done = QUIZ_STEPS.filter((x) => steps[x.id]).length;
-  return { id, tag, prep, mats, study, mocks, graded, cards, fresh, steps, done, total: QUIZ_STEPS.length };
+  const list = quizStepsFor(course);
+  const done = list.filter((x) => steps[x.id]).length;
+  return { id, tag, prep, mats, study, mocks, graded, cards, fresh, drillId, drill, steps, list, done, total: list.length };
 }
 
 /** "明天 12:00", "今天 12:00", "3 天後", "考完了" … */
@@ -333,6 +384,7 @@ function QuizReview({ params }) {
   const [uploading, setUploading] = useState(false);
   const [openMat, setOpenMat] = useState(null);
   const [openSheet, setOpenSheet] = useState(false);
+  const [drillStage, setDrillStage] = useState(null);
   const c = quizCourses.find((x) => x.code === code) || quizCourses[0] || null;
 
   if (!c)
@@ -422,28 +474,16 @@ function QuizReview({ params }) {
   };
   const openMock = st.mocks.find((x) => x.status !== 'graded');
 
+  if (drillStage)
+    return html`<${DrillView} key=${st.drillId} course=${c} materials=${st.study} drillId=${st.drillId} scope=${`${scope}${topic ? ` ${topic}` : ''}`}
+      stage=${drillStage} backLabel="← 回到小考準備" onClose=${() => setDrillStage(null)} nextLabel="下一步：模擬小考" onNext=${mock} />`;
+
   if (openSheet && st.prep && st.prep.sheet)
     return html`<${QuizSheetView} prep=${st.prep} course=${c} sit=${sit} onClose=${() => setOpenSheet(false)} onMock=${mock} />`;
 
-  return html`<div class="stack">
-    ${picker}
-    <section class=${'qz-hero c-' + (c.color || 'pen')}>
-      <div class="qz-hero__top"><${CourseChip} code=${c.code} /><span class="eyebrow">${next && sit.week === next.week ? '下次小考' : past ? '考過的小考' : '之後的小考'} · ${q.label}</span></div>
-      <h2 class="qz-hero__title">考 W${sit.covers} 的內容${lect ? html`<span class="qz-hero__lect">${lect}</span>` : null}</h2>
-      ${topic ? html`<p class="qz-hero__topic">${topic}</p>` : null}
-      <div class="qz-hero__when">
-        <span class="qz-hero__date">${U.fmtDate(sit.date)} ${sit.cls.start}</span>
-        <${Pill} tone=${past ? 'muted' : U.daysBetween(today, sit.date) <= 1 ? 'warn' : 'pen'}>${when}</${Pill}>
-      </div>
-      <p class="muted small">${[classLabel, sit.cls.location, q.best && q.of ? `${q.of} 次取最好 ${q.best} 次` : '', q.weight ? `共占 ${q.weight}%` : ''].filter(Boolean).join(' · ')}</p>
-      <${Progress} value=${st.done / st.total} tone="ok" label="考前準備進度" />
-      <span class="muted small">${past ? '複習進度' : '考前準備'} ${st.done}/${st.total}${st.done === st.total && !past ? ' · 都準備好了，考前再看一次考前重點就好' : ''}</span>
-    </section>
-
-    <ol class="qz-steps">
-      <li class=${U.cls('qz-step', st.steps.slides && 'is-done')}>
-        <div class="qz-step__head"><span class="step__n">${st.steps.slides ? '✓' : '1'}</span><h3>投影片導讀 <span class="muted small">${scope}</span></h3></div>
-        ${st.mats.length
+  // The body of each prep step; the order (and numbering) comes from the course's step list.
+  const blocks = {
+    slides: () => html`${st.mats.length
           ? html`<ul class="qz-mats">${st.mats.map(
               (m) => html`<li key=${m.id}>
                 <button type="button" class="link-plain" onClick=${() => setOpenMat(m.id)}>${m.title}</button>
@@ -470,12 +510,15 @@ function QuizReview({ params }) {
           : html`<div class="row wrap">
               <${Btn} kind=${st.mats.length ? 'ghost' : 'primary'} size="sm" icon="upload" onClick=${() => setUploading(true)}>上傳 W${sit.covers} 投影片</${Btn}>
             </div>
-            <p class="muted small">有 ${classLabel} 的題目或解答？上傳時類型選「${MATERIAL_KINDS.exam}」，模擬小考會模仿它的格式。</p>`}
-      </li>
-
-      <li class=${U.cls('qz-step', st.steps.sheet && 'is-done')}>
-        <div class="qz-step__head"><span class="step__n">${st.steps.sheet ? '✓' : '2'}</span><h3>考前重點</h3></div>
-        <p class="muted small">一頁看完：要會寫的定義、要會用的規則、每種題型的解題步驟、常見錯誤、英文作答句型，最後幾題快問快答。</p>
+            <p class="muted small">有 ${classLabel} 的題目或解答？上傳時類型選「${MATERIAL_KINDS.exam}」，模擬小考會模仿它的格式。</p>`}`,
+    drill: () => html`
+        <p class="muted small">先看 3 題附完整解答的例題，再自己做 4 題簡單的同類題、對詳解；題型熟了再做模擬小考。</p>
+        ${st.drill.exists ? html`<p class="small">例題看懂 ${st.drill.seen} 題 · 基礎題${st.drill.marked ? `做對 ${st.drill.ok} / ${st.drill.marked}` : '還沒做'}</p>` : null}
+        <div class="row wrap">
+          <${Btn} kind=${st.steps.drill ? 'ghost' : 'primary'} size="sm" icon="practice" onClick=${() => setDrillStage(st.drill.examples ? 'basics' : 'examples')}>
+            ${!st.drill.exists ? '開始題型練習' : st.drill.examples ? (st.steps.drill ? '再看一次基礎題' : '繼續基礎題') : '繼續看例題'}</${Btn}>
+        </div>`,
+    sheet: () => html`<p class="muted small">一頁看完：要會寫的定義、要會用的規則、每種題型的解題步驟、常見錯誤、英文作答句型，最後幾題快問快答。</p>
         ${!st.mats.length && !st.steps.sheet ? html`<p class="muted small">還沒有投影片時，書僮只能用${topic ? `「${topic}」` : '這個主題'}的一般內容整理。</p>` : null}
         <div class="row wrap">
           ${st.steps.sheet
@@ -484,39 +527,60 @@ function QuizReview({ params }) {
             : html`<${Btn} kind="primary" size="sm" icon="spark" disabled=${ai.busy || rt.ai !== 'ready'} onClick=${genSheet}>產生考前重點</${Btn}>`}
         </div>
         <${Thinking} ai=${ai} label="書僮整理考前重點中" />
-        <${AIError} ai=${ai} onRetry=${genSheet} />
-      </li>
-
-      <li class=${U.cls('qz-step', st.steps.mock && 'is-done')}>
-        <div class="qz-step__head"><span class="step__n">${st.steps.mock ? '✓' : '3'}</span><h3>模擬小考</h3></div>
-        <p class="muted small">6 題，照 ${classLabel} 小考的方式出題；交卷後答錯的題目會自動進錯題本和閃卡。</p>
+        <${AIError} ai=${ai} onRetry=${genSheet} />`,
+    mock: () => html`<p class="muted small">6 題，照 ${classLabel} 小考的方式出題；交卷後答錯的題目會自動進錯題本和閃卡。</p>
         ${st.graded.length ? html`<p class="small">已做 ${st.graded.length} 份 · 最近一次 ${Math.round((st.graded[0].score || 0) * 100)} 分</p>` : null}
         <div class="row wrap">
           ${openMock
             ? html`<${Btn} kind="primary" size="sm" icon="practice" onClick=${() => go('practice', { tab: 'quiz', quiz: openMock.id })}>繼續沒交卷的那份</${Btn}>`
             : null}
           <${Btn} kind=${st.steps.mock || openMock ? 'ghost' : 'primary'} size="sm" icon="practice" onClick=${mock}>${st.mocks.length ? '再做一份模擬小考' : '做一份模擬小考'}</${Btn}>
-        </div>
-      </li>
-
-      <li class=${U.cls('qz-step', st.steps.cards && 'is-done')}>
-        <div class="qz-step__head"><span class="step__n">${st.steps.cards ? '✓' : '4'}</span><h3>閃卡＋錯題</h3></div>
-        <p class="muted small">${st.cards.length
+        </div>`,
+    cards: () => html`<p class="muted small">${st.cards.length
           ? `W${sit.covers} 的卡片 ${st.cards.length} 張${st.fresh.length ? `，${st.fresh.length} 張考前還沒複習` : '，考前都複習過了'}。`
           : `還沒有 W${sit.covers} 的卡片：導讀裡的關鍵名詞可以加進來，模擬小考答錯的題目也會自動進來。`}</p>
         <div class="row wrap">
           ${st.cards.length ? html`<${Btn} kind=${st.steps.cards ? 'ghost' : 'primary'} size="sm" icon="card" onClick=${cram}>考前閃卡（${st.cards.length}）</${Btn}>` : null}
           ${termless.length ? html`<${Btn} kind="ghost" size="sm" icon="plus" onClick=${addTerms}>把導讀的名詞加入閃卡</${Btn}>` : null}
           <${Btn} kind="ghost" size="sm" icon="flag" onClick=${() => go('practice', { tab: 'mistakes', course: c.code })}>${c.code} 錯題本</${Btn}>
-        </div>
-      </li>
-    </ol>
+        </div>`,
+  };
+
+  return html`<div class="stack">
+    ${picker}
+    <section class=${'qz-hero c-' + (c.color || 'pen')}>
+      <div class="qz-hero__top"><${CourseChip} code=${c.code} /><span class="eyebrow">${next && sit.week === next.week ? '下次小考' : past ? '考過的小考' : '之後的小考'} · ${q.label}</span></div>
+      <h2 class="qz-hero__title">考 W${sit.covers} 的內容${lect ? html`<span class="qz-hero__lect">${lect}</span>` : null}</h2>
+      ${topic ? html`<p class="qz-hero__topic">${topic}</p>` : null}
+      <div class="qz-hero__when">
+        <span class="qz-hero__date">${U.fmtDate(sit.date)} ${sit.cls.start}</span>
+        <${Pill} tone=${past ? 'muted' : U.daysBetween(today, sit.date) <= 1 ? 'warn' : 'pen'}>${when}</${Pill}>
+      </div>
+      <p class="muted small">${[classLabel, sit.cls.location, q.best && q.of ? `${q.of} 次取最好 ${q.best} 次` : '', q.weight ? `共占 ${q.weight}%` : ''].filter(Boolean).join(' · ')}</p>
+      <${Progress} value=${st.done / st.total} tone="ok" label="考前準備進度" />
+      <span class="muted small">${past ? '複習進度' : '考前準備'} ${st.done}/${st.total}${st.done === st.total && !past ? ' · 都準備好了，考前再看一次考前重點就好' : ''}</span>
+    </section>
+
+    <ol class="qz-steps">${st.list.map(
+      (x, i) => html`<li key=${x.id} class=${U.cls('qz-step', st.steps[x.id] && 'is-done')}>
+        <div class="qz-step__head"><span class="step__n">${st.steps[x.id] ? '✓' : i + 1}</span><h3>${x.label}${x.id === 'slides' ? html` <span class="muted small">${scope}</span>` : null}</h3></div>
+        ${blocks[x.id]()}
+      </li>`
+    )}</ol>
+    ${st.list.some((x) => x.id === 'cards')
+      ? null
+      : html`<section class="qz-extra">
+          <h3 class="qz-extra__h">加強（選做）：閃卡＋錯題</h3>
+          ${blocks.cards()}
+        </section>`}
 
     <${QuizScores} course=${c} q=${q} sittings=${sittings} current=${sit} onPick=${(w) => (setWeek(w), setUploading(false))} />
 
     <aside class="tip">
       <span class="tip__label">考前怎麼用</span>
-      <p>前一天：導讀 → 考前重點 → 模擬小考，大約 40 分鐘。當天出門前：只看考前重點的「必背」和「常見錯誤」，再刷一輪閃卡。考完回來記下分數，錯的地方會留在錯題本，期末考前再複習。</p>
+      <p>${c.kind === 'math'
+        ? '前一天：導讀 → 題型練習（例題、基礎題）→ 模擬小考，大約 50 分鐘。當天出門前：只看考前重點的「必背」和「常見錯誤」。考完回來記下分數，錯的題目會留在錯題本，期末考前再練。'
+        : '前一天：導讀 → 考前重點 → 模擬小考，大約 40 分鐘。當天出門前：只看考前重點的「必背」和「常見錯誤」，再刷一輪閃卡。考完回來記下分數，錯的地方會留在錯題本，期末考前再複習。'}</p>
     </aside>
   </div>`;
 }

@@ -665,7 +665,7 @@ Counts: prerequisites 2-4, key_terms 5-8, watch_for 3-4, warmup 2-3 (programming
   }
 
   /* ---------- 考前重點 / last-minute sheet for a weekly quiz ---------- */
-  async function quizSheet({ course, week, covers, topic, date, time, classLabel, materials, signal, onProgress }) {
+  async function quizSheet({ course, week, covers, lectures, topic, date, time, classLabel, materials, signal, onProgress }) {
     const budget = Math.floor(42000 / Math.max(1, materials.length));
     const blocks = [];
     for (const m of materials) blocks.push(materialBlock(m, Extract.sampleEvenly(await Store.getText(m.id), budget)));
@@ -681,7 +681,7 @@ ${courseBlock(course)}
 ${KIND_STYLE[course.kind] || ''}
 
 TASK
-The learner sits a short in-class quiz in the week ${week} ${classLabel || 'class'}${date ? ` on ${date}${time ? ` at ${time}` : ''}` : ''}. It tests the week ${covers} content${topic ? ` ("${topic}")` : ''}. Write a one-page LAST-MINUTE REVIEW SHEET (考前重點) to read in 15-20 minutes right before the quiz.
+The learner sits a short in-class quiz in the week ${week} ${classLabel || 'class'}${date ? ` on ${date}${time ? ` at ${time}` : ''}` : ''}. It tests the week ${covers} content${lectures ? ` (lectures ${lectures})` : ''}${topic ? ` ("${topic}")` : ''}. Write a one-page LAST-MINUTE REVIEW SHEET (考前重點) to read in 15-20 minutes right before the quiz.
 Focus on what a short quiz on this content can ask: definitions to state precisely, rules and theorems to apply, and the standard question types with the exact steps to answer them. Keep every item short; this is a checklist, not a textbook.
 ${blocks.length ? `${NOTE_EXTRACTED}
 ${blocks.join('\n\n')}` : `No slides are available: use the standard content of this topic in a course like this, and say so in "scope_zh".`}

@@ -3430,15 +3430,51 @@ details.tgroup > summary {
 }
 .qz-hero__date {
   font-family: var(--font-mono);
-  font-size: var(--fs-xl);
+  font-size: var(--fs-lg);
   font-weight: 700;
 }
-.qz-hero__scope {
+.qz-hero__top {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.4rem 0.6rem;
+}
+.qz-hero__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.7rem;
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  line-height: 1.25;
+}
+.qz-hero__lect {
+  font-family: var(--font-mono);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c);
+}
+.qz-hero__topic {
   font-size: var(--fs-md);
+  color: var(--ink-2);
+}
+.wc__lect {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c);
+}
+.wq-preview {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--pen-soft);
+  border-radius: var(--r-sm);
+}
+.wq-preview ul {
+  list-style: none;
+  display: grid;
+  gap: 0.2rem;
 }
 .qz-steps {
   list-style: none;

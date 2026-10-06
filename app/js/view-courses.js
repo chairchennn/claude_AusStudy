@@ -10,10 +10,21 @@ function guessKind(name) {
   if (/(note|summary|筆記)/.test(n)) return 'notes';
   return 'lecture';
 }
-function guessWeek(name) {
-  const m = name.match(/(?:week|wk|lecture|lec|tutorial|tut|w|l)[\s_\-.]*0?(\d{1,2})(?!\d)/i);
-  const n = m ? Number(m[1]) : null;
-  return n && n <= 14 ? n : null;
+/**
+ * The teaching week of a file from its name: "Week 9" / "W9" / "Tutorial 9" give the week directly; a lecture number
+ * ("L24", "Lecture 24") goes through the course's lecture numbering, since several lectures a week means L24 ≠ W24.
+ */
+function guessWeek(name, course = null) {
+  const num = (re) => {
+    const m = name.match(re);
+    return m ? Number(m[1]) : null;
+  };
+  const week = num(/(?:^|[^a-z])(?:week|wk|w)[\s_\-.]*0?(\d{1,2})(?!\d)/i);
+  if (week >= 1 && week <= 14) return week;
+  const lecture = num(/(?:^|[^a-z])(?:lecture|lect|lec|l)[\s_\-.]*0?(\d{1,3})(?!\d)/i);
+  if (lecture && course) return weekOfLecture(course, lecture, Store.state.timetable, Store.state.settings.semester);
+  const tut = num(/(?:^|[^a-z])(?:tutorial|tut|prac|practical|applied(?:[\s_\-.]*class)?|lab)[\s_\-.]*0?(\d{1,2})(?!\d)/i);
+  return tut >= 1 && tut <= 14 ? tut : null;
 }
 const baseName = (name) => name.replace(/\.[a-z0-9]+$/i, '').replace(/[_]+/g, ' ').trim();
 
@@ -264,7 +275,7 @@ function UploadPanel({ course, onDone, defaults = {} }) {
         file: f,
         title: baseName(f.name),
         kind: defaults.kind && guessKind(f.name) === 'lecture' ? defaults.kind : guessKind(f.name),
-        week: defaults.week || guessWeek(f.name) || '',
+        week: defaults.week || guessWeek(f.name, course) || '',
         status: 'reading',
         progress: '',
       })),
@@ -641,43 +652,67 @@ function AssessmentEditor({ course }) {
 /** Weekly in-class quiz (e.g. MATH7861: each applied class tests last week's content). */
 function WeeklyQuizEditor({ course }) {
   const s = useStore();
+  const sem = s.settings.semester;
   const wq = { ...QUIZ_DEFAULTS, ...(course.weeklyQuiz || {}) };
   const set = (patch) => Store.patch('courses', course.code, { weeklyQuiz: { ...wq, ...patch }, updatedAt: U.nowIso() });
+  const anchor = course.lectureAnchor || {};
+  const setAnchor = (patch) => {
+    const next = { ...anchor, ...patch };
+    Store.patch('courses', course.code, { lectureAnchor: next.week || next.from ? next : null, updatedAt: U.nowIso() });
+  };
   const types = [...new Set(s.timetable.classes.filter((c) => c.courseCode === course.code).map((c) => c.type))];
   const num = (v) => (v === '' ? 0 : Math.max(0, Math.round(Number(v)) || 0));
   const id = (k) => `wq-${k}-${course.code}`;
+  // What the settings mean right now, so a wrong choice shows up immediately.
+  const today = U.today();
+  const coming = wq.on ? quizSittings({ ...course, weeklyQuiz: wq }, s.timetable, sem).filter((x) => x.held && x.date >= today).slice(0, 3) : [];
+  const lect = (w) => lectureLabel(course, w, s.timetable, sem);
+  const lectures = lectureNumbers(course, s.timetable, sem);
   return html`<div class="panel exam-box">
     <div class="exam-box__label">每週小考</div>
     <label class="check"><input type="checkbox" id=${id('on')} checked=${!!wq.on} onChange=${(e) => set({ on: e.target.checked })} />
       這門課每週有小考：在「複習 → 小考」準備，考前一天排複習任務</label>
     ${wq.on
       ? html`<div class="form-grid">
-          <${Field} label="在哪一堂考" id=${id('cls')}>
+          <${Field} label="在哪一堂課考" id=${id('cls')}>
             <select id=${id('cls')} value=${wq.classType} onChange=${(e) => set({ classType: e.target.value })}>
               ${[...new Set([...types, wq.classType])].map((t) => html`<option value=${t}>${CLASS_TYPES[t] || t}</option>`)}
             </select>
           </${Field}>
-          <${Field} label="考的範圍" id=${id('covers')}>
+          <${Field} label="小考考什麼" id=${id('covers')}>
             <select id=${id('covers')} value=${wq.covers} onChange=${(e) => set({ covers: e.target.value })}>
-              <option value="prev">上週的內容</option>
-              <option value="this">這週的內容</option>
+              <option value="prev">前一週上的內容</option>
+              <option value="this">同一週上的內容</option>
             </select>
           </${Field}>
-          <${Field} label="第幾週到第幾週" id=${id('from')}>
-            <span class="row nowrap"><input id=${id('from')} class="w-num" type="number" min="1" max="13" value=${wq.fromWeek} onChange=${(e) => set({ fromWeek: num(e.target.value) || 1 })} />
-              <span>–</span><input aria-label="到第幾週" id=${id('to')} class="w-num" type="number" min="1" max="13" value=${wq.toWeek} onChange=${(e) => set({ toWeek: num(e.target.value) || 13 })} /></span>
+          <${Field} label="哪幾週的課有小考" id=${id('from')} hint="照上課週次，例：第 2–13 週">
+            <span class="row nowrap"><${NumInput} id=${id('from')} class="w-num" min="1" max="13" value=${wq.fromWeek} onCommit=${(v) => set({ fromWeek: num(v) || 1 })} />
+              <span>–</span><${NumInput} aria-label="到第幾週" id=${id('to')} class="w-num" min="1" max="13" value=${wq.toWeek} onCommit=${(v) => set({ toWeek: num(v) || 13 })} /></span>
           </${Field}>
           <${Field} label="取最好幾次 / 共幾次" id=${id('best')}>
-            <span class="row nowrap"><input id=${id('best')} class="w-num" type="number" min="0" value=${wq.best || ''} onChange=${(e) => set({ best: num(e.target.value) })} />
-              <span>/</span><input aria-label="共幾次" id=${id('of')} class="w-num" type="number" min="0" value=${wq.of || ''} onChange=${(e) => set({ of: num(e.target.value) })} /></span>
+            <span class="row nowrap"><${NumInput} id=${id('best')} class="w-num" min="0" value=${wq.best || ''} onCommit=${(v) => set({ best: num(v) })} />
+              <span>/</span><${NumInput} aria-label="共幾次" id=${id('of')} class="w-num" min="0" value=${wq.of || ''} onCommit=${(v) => set({ of: num(v) })} /></span>
           </${Field}>
-          <${Field} label="共占 %" id=${id('w')}>
-            <input id=${id('w')} class="w-num" type="number" min="0" max="100" value=${wq.weight || ''} onChange=${(e) => set({ weight: num(e.target.value) })} />
+          <${Field} label="全部小考共占 %" id=${id('w')}>
+            <${NumInput} id=${id('w')} class="w-num" min="0" max="100" value=${wq.weight || ''} onCommit=${(v) => set({ weight: num(v) })} />
+          </${Field}>
+          <${Field} label="講課編號（選填）" id=${id('lw')} hint="填一週就好，其他週會照課表推算">
+            <span class="row nowrap"><span>第</span><${NumInput} id=${id('lw')} class="w-num" min="1" max="13" value=${anchor.week || ''} onCommit=${(v) => setAnchor({ week: num(v) })} />
+              <span>週從 L</span><${NumInput} aria-label="第一堂講課的編號" id=${id('lf')} class="w-num" min="1" value=${anchor.from || ''} onCommit=${(v) => setAnchor({ from: num(v) })} /><span>開始</span></span>
           </${Field}>
         </div>
-        ${types.includes(wq.classType)
-          ? html`<${Btn} kind="ghost" size="sm" icon="right" onClick=${() => go('review', { tab: 'quiz', course: course.code })}>到小考準備</${Btn}>`
-          : html`<p class="muted small">課表裡還沒有這門課的 ${CLASS_TYPES[wq.classType] || wq.classType}，先到計畫頁把它加進課表。</p>`}`
+        ${coming.length
+          ? html`<div class="wq-preview" aria-label="接下來的小考">
+              <span class="muted small">照這個設定，接下來的小考：</span>
+              <ul>${coming.map((x) => html`<li key=${x.week}><b>${U.fmtDate(x.date)} ${x.cls.start}</b> 考 <b>W${x.covers}</b>${lect(x.covers) ? `（${lect(x.covers)}）` : ' '}的內容</li>`)}</ul>
+            </div>`
+          : types.includes(wq.classType)
+            ? html`<p class="muted small">這學期接下來沒有小考了。</p>`
+            : html`<p class="muted small">課表裡還沒有這門課的 ${CLASS_TYPES[wq.classType] || wq.classType}，先到計畫頁把它加進課表。</p>`}
+        ${lectures
+          ? html`<p class="muted small">講課編號：${Object.entries(lectures).filter(([, r]) => r).map(([w]) => `W${w} ${lect(Number(w))}`).join('、')}</p>`
+          : null}
+        ${coming.length ? html`<${Btn} kind="ghost" size="sm" icon="right" onClick=${() => go('review', { tab: 'quiz', course: course.code })}>到小考準備</${Btn}>` : null}`
       : null}
   </div>`;
 }

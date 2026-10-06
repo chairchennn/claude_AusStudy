@@ -158,6 +158,8 @@ const courses = {
     exam: { name: '期末考', date: null, weight: 50, note: 'Hurdle（需達門檻）· 身分驗證 · 現場考試' },
     // Each Wednesday applied class opens with a quiz on the previous week's content (learner, 2026-10-06; ECP: best 8 of 12, 30%).
     weeklyQuiz: { on: true, label: 'Applied class 小考', classType: 'applied', covers: 'prev', fromWeek: 2, toWeek: 13, best: 8, of: 12, weight: 30 },
+    // The learner's lecture numbering: week 9 was L24–26 (2026-10-06); other weeks follow from the timetable.
+    lectureAnchor: { week: 9, from: 24 },
   },
 };
 

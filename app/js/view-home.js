@@ -83,7 +83,7 @@ function suggestions(s, today) {
     list.unshift({
       key: 'quiz-' + c.code + sit.week,
       course: c.code,
-      text: `${quizWhen(sit)} 小考（考 W${sit.covers}）：考前準備 ${st.done}/${st.total}`,
+      text: `${quizWhen(sit)} 小考（考 W${sit.covers}${lectureLabel(c, sit.covers, s.timetable, sem) ? ` · ${lectureLabel(c, sit.covers, s.timetable, sem)}` : ''}）：考前準備 ${st.done}/${st.total}`,
       act: () => go('review', { tab: 'quiz', course: c.code }),
     });
   }

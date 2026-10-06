@@ -104,7 +104,8 @@ const noOverflow = async (page, label) => {
       if (!fileInfo.some((t) => /2 頁/.test(t))) throw new Error('pdf pages not read: ' + fileInfo.join(' | '));
       if (!fileInfo.some((t) => /3 張投影片/.test(t))) throw new Error('pptx slides not read: ' + fileInfo.join(' | '));
       const weeks = await page.locator('.w-week').evaluateAll((els) => els.map((e) => e.value));
-      if (weeks[0] !== '9' || weeks[2] !== '7') throw new Error('week guess wrong: ' + weeks);
+      // "Lecture 8" in MATH7861 (3 lectures a week, W9 = L24) is week 3, not week 8.
+      if (weeks[0] !== '9' || weeks[1] !== '3' || weeks[2] !== '7') throw new Error('week guess wrong: ' + weeks);
       await page.screenshot({ path: path.join(OUT, '02-upload.png'), fullPage: true });
       await page.getByRole('button', { name: '儲存 3 份' }).click();
       await page.locator('.mat').nth(2).waitFor();
@@ -217,7 +218,7 @@ const noOverflow = async (page, label) => {
       await page.getByRole('button', { name: '產生預習與課前任務' }).click();
       await page.getByText(/加入 19 項預習/).waitFor();
       await page.getByText('CSSE7030：預習 W10（預習導讀＋暖身題）').first().waitFor();
-      await page.getByText('MATH7861：小考前複習 W9（考前重點＋模擬小考）').first().waitFor();
+      await page.getByText('MATH7861：小考前複習 W9 · L24–26（考前重點＋模擬小考）').first().waitFor();
       await page.getByRole('button', { name: '產生預習與課前任務' }).click();
       await page.getByText('這些任務都已經在清單裡了').waitFor();
     });
@@ -344,23 +345,37 @@ const noOverflow = async (page, label) => {
       const { ctx, page: p } = await newPage(browser, { time: '2026-10-06T18:00:00+10:00' });
       watch(p, 'quiz');
       await p.goto('http://app.test/');
-      await p.locator('.sugg__item', { hasText: '明天 12:00 小考（考 W9）' }).click();
+      await p.locator('.sugg__item', { hasText: '明天 12:00 小考（考 W9 · L24–26）' }).click();
       const hero = p.locator('.qz-hero');
+      await hero.locator('.qz-hero__title', { hasText: '考 W9 的內容' }).waitFor();
+      await hero.locator('.qz-hero__lect', { hasText: 'L24–26' }).waitFor();
       await hero.getByText('10/7 週三 12:00').waitFor();
       await hero.getByText('明天 12:00').waitFor();
-      await hero.locator('b', { hasText: 'W9' }).waitFor();
+      // The sitting's own week (W10) is not shown: it was easy to mistake for the week being tested.
+      if (/W10/.test(await hero.innerText())) throw new Error('quiz hero should only name the tested week');
+      // A slide filed under the wrong week can be moved to W9 from here.
+      // L25 filed as W10 is offered for W9; L27 really is W10, so it is left alone.
+      await p.evaluate(() => {
+        const at = new Date().toISOString();
+        Store.set('materials', 'mis1', { courseCode: 'MATH7861', title: 'L25 Recursion', kind: 'lecture', week: 10, createdAt: at });
+        Store.set('materials', 'mis2', { courseCode: 'MATH7861', title: 'L27 Graphs', kind: 'lecture', week: 10, createdAt: at });
+      });
+      await p.getByRole('button', { name: /「L25 Recursion」（W10）改成 W9/ }).click();
+      await p.locator('.qz-mats li', { hasText: 'L25 Recursion' }).waitFor();
+      if (await p.getByRole('button', { name: /L27 Graphs/ }).count()) throw new Error('L27 is a W10 lecture and should not be offered for W9');
+      await p.evaluate(() => (Store.remove('materials', 'mis1'), Store.remove('materials', 'mis2')));
       // Upload last week's slides from the quiz page: they are filed under W9.
       await p.getByRole('button', { name: '上傳 W9 投影片' }).click();
       await p.setInputFiles('#up-file', path.join(FIX, 'CYBR7002 Lecture 8 Cryptography.pdf'));
       await p.getByRole('button', { name: '儲存 1 份' }).click();
       await p.locator('.qz-mats li').first().waitFor();
-      const mat = await p.evaluate(() => [...window.__db.entries()].filter(([k]) => k.startsWith('materials/')).map(([, v]) => v)[0]);
+      const mat = await p.evaluate(() => [...window.__db.entries()].filter(([k]) => k.startsWith('materials/') && !/\/mis\d$/.test(k)).map(([, v]) => v)[0]);
       if (mat.week !== 9 || mat.courseCode !== 'MATH7861') throw new Error('quiz upload not filed under MATH7861 W9: ' + JSON.stringify({ week: mat.week, course: mat.courseCode }));
       // 考前重點
       await p.getByRole('button', { name: '產生考前重點' }).click();
       await p.getByRole('heading', { name: 'Proof by induction: quiz sheet' }).waitFor();
       const call = await p.evaluate(() => window.__sampleCalls.filter((c) => /LAST-MINUTE REVIEW SHEET/.test(c.prompt || '')).slice(-1)[0]);
-      if (!call || !/tests the week 9 content/.test(call.prompt)) throw new Error('quiz sheet prompt should name the covered week');
+      if (!call || !/tests the week 9 content \(lectures L24–26\)/.test(call.prompt)) throw new Error('quiz sheet prompt should name the covered week and lectures');
       await p.getByRole('button', { name: '看答案' }).click();
       await p.locator('.warmup__ans', { hasText: 'That P(k) is true for an arbitrary k ≥ n₀.' }).waitFor();
       await p.getByRole('button', { name: '全部加入閃卡' }).click();
@@ -387,20 +402,27 @@ const noOverflow = async (page, label) => {
       await p.locator('.qz-step.is-done', { hasText: '閃卡＋錯題' }).waitFor();
       // Score of the last sitting (W9, on W8 content) counts toward best 8 of 12.
       const row = p.locator('.qz-scores tr', { hasText: '9/23' });
-      await row.getByLabel('W9 得分').fill('8');
-      await row.getByLabel('W9 得分').press('Tab');
-      await row.getByLabel('W9 滿分').fill('10');
-      await row.getByLabel('W9 滿分').press('Tab');
+      await row.getByLabel('9/23 得分').fill('8');
+      await row.getByLabel('9/23 得分').press('Tab');
+      await row.getByLabel('9/23 滿分').fill('10');
+      await row.getByLabel('9/23 滿分').press('Tab');
       await p.locator('.qz-standing', { hasText: '已記錄 1 次 · 最好 1 次平均 80% · 已拿到約 3 / 30 分' }).waitFor();
-      await row.getByRole('button', { name: '看 W9 小考準備' }).click();
+      await row.getByRole('button', { name: '看 9/23 的小考準備' }).click();
       await hero.getByText('考過的小考', { exact: false }).waitFor();
-      await hero.locator('b', { hasText: 'W8' }).waitFor();
+      await hero.locator('.qz-hero__title', { hasText: '考 W8 的內容' }).waitFor();
+      await hero.locator('.qz-hero__lect', { hasText: 'L21–23' }).waitFor();
       await p.screenshot({ path: path.join(OUT, '13-quiz-prep.png'), fullPage: true });
       // The course page keeps the settings.
       await p.locator('.rail__nav').getByRole('button', { name: '課程' }).click();
       await p.locator('.course-card', { hasText: 'MATH7861' }).click();
       await p.getByRole('tab', { name: /評量與考試/ }).click();
       if (!(await p.locator('#wq-on-MATH7861').isChecked())) throw new Error('weekly quiz toggle should be on for MATH7861');
+      // The settings spell out what they mean: the next sittings and the week each one tests.
+      await p.locator('.wq-preview li', { hasText: '10/7 週三 12:00 考 W9（L24–26）的內容' }).waitFor();
+      await p.locator('#wq-covers-MATH7861').selectOption('this');
+      await p.locator('.wq-preview li', { hasText: '10/7 週三 12:00 考 W10（L27–28）的內容' }).waitFor();
+      await p.locator('#wq-covers-MATH7861').selectOption('prev');
+      await p.locator('.wq-preview li', { hasText: '10/7 週三 12:00 考 W9（L24–26）的內容' }).waitFor();
       await ctx.close();
     });
 

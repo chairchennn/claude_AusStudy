@@ -417,6 +417,10 @@
    "of": 12,
    "weight": 30
   },
+  "lectureAnchor": {
+   "week": 9,
+   "from": 24
+  },
   "createdAt": "2026-10-01T00:00:00.000Z",
   "updatedAt": "2026-10-01T00:00:00.000Z"
  },

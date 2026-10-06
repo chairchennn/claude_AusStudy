@@ -201,6 +201,14 @@ function Field({ label, hint, children, id }) {
   </label>`;
 }
 
+/** A number box that keeps what is being typed until it is committed (change/blur), so a store update cannot overwrite it. */
+function NumInput({ value, onCommit, ...rest }) {
+  const [draft, setDraft] = useState(null);
+  return html`<input type="number" inputmode="decimal" ...${rest} value=${draft ?? value ?? ''}
+    onInput=${(e) => setDraft(e.target.value)}
+    onChange=${(e) => (onCommit(e.target.value.trim()), setDraft(null))} />`;
+}
+
 function Progress({ value, tone = 'pen', label }) {
   const v = U.clamp(Math.round((value || 0) * 100), 0, 100);
   return html`<div class="bar" role="progressbar" aria-valuenow=${v} aria-valuemin="0" aria-valuemax="100" aria-label=${label || ''}>

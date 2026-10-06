@@ -113,6 +113,57 @@ function quizStanding(q, records) {
   };
 }
 
+/* ---------- lecture numbers (L1, L2, …) per teaching week ---------- */
+/** Lectures of one course held in a teaching week (public holidays skipped). */
+function lectureCount(course, w, timetable, sem) {
+  let n = 0;
+  for (let i = 0; i < 7; i++) n += classesOn(U.addDays(w.start, i), timetable, sem).filter((c) => c.courseCode === course.code && c.type === 'lecture').length;
+  return n;
+}
+
+/**
+ * {week: [first, last]} lecture numbers for every teaching week, counted out from one anchor the learner gave
+ * (course.lectureAnchor = {week: 9, from: 24}: the first lecture of W9 is L24). Null without an anchor.
+ */
+function lectureNumbers(course, timetable, sem) {
+  const a = course && course.lectureAnchor;
+  if (!a || !(Number(a.week) > 0) || !(Number(a.from) > 0) || !timetable) return null;
+  const weeks = semesterWeeks(sem).filter((w) => w.phase === 'teaching' && w.week);
+  const out = {};
+  let n = Number(a.from);
+  for (const w of weeks.filter((x) => x.week >= Number(a.week))) {
+    const k = lectureCount(course, w, timetable, sem);
+    out[w.week] = k ? [n, n + k - 1] : null;
+    n += k;
+  }
+  n = Number(a.from);
+  for (const w of weeks.filter((x) => x.week < Number(a.week)).reverse()) {
+    const k = lectureCount(course, w, timetable, sem);
+    const last = n - 1;
+    out[w.week] = k && last >= 1 ? [Math.max(1, last - k + 1), last] : null;
+    n = Math.max(1, last - k + 1);
+  }
+  return out;
+}
+
+/** "L24–26" for a course's teaching week, or '' when unknown. */
+function lectureLabel(course, week, timetable, sem) {
+  const map = lectureNumbers(course, timetable, sem);
+  const r = map && map[week];
+  return r ? (r[0] === r[1] ? `L${r[0]}` : `L${r[0]}–${r[1]}`) : '';
+}
+
+/** The teaching week of lecture n: from the anchor when there is one; one lecture a week means lecture n ≈ week n. */
+function weekOfLecture(course, n, timetable, sem) {
+  const map = lectureNumbers(course, timetable, sem);
+  if (map) {
+    const hit = Object.entries(map).find(([, r]) => r && n >= r[0] && n <= r[1]);
+    return hit ? Number(hit[0]) : null;
+  }
+  const perWeek = (timetable && timetable.classes || []).filter((c) => c.courseCode === (course && course.code) && c.type === 'lecture').length;
+  return perWeek <= 1 && n >= 1 && n <= 13 ? n : null;
+}
+
 /**
  * Tasks implied by the timetable between `from` and `to`:
  *  - 預習 the day before the first lecture of each week, for courses marked `preview`;
@@ -156,15 +207,16 @@ function buildClassTasks({ timetable, courses, sem, from, to, existingKeys = [] 
       if (q && cls.type === q.classType && week >= q.fromWeek && week <= q.toWeek) {
         const covers = q.covers === 'this' ? week : Math.max(1, week - 1);
         const coversTopic = topicFor(c, covers);
+        const lect = lectureLabel(c, covers, timetable, sem);
         add(`prep-${c.code}-${date}`, {
           date: dayBefore(date),
           courseCode: c.code,
-          title: `${c.code}：小考前複習 W${covers}${coversTopic ? `「${coversTopic}」` : ''}（考前重點＋模擬小考）`,
+          title: `${c.code}：小考前複習 W${covers}${lect ? ` · ${lect}` : ''}${coversTopic ? `「${coversTopic}」` : ''}（考前重點＋模擬小考）`,
           minutes: 40,
           kind: 'practice',
           priority: 1,
           week,
-          why: `${DAY_NAMES[isoDay(date)]} ${cls.start} 的 ${typeLabel}${typeGap}當場小考 W${covers} 的內容${q.best && q.of ? `（${q.of} 次取最好 ${q.best} 次${q.weight ? `，共占 ${q.weight}%` : ''}）` : ''}。到「複習 → 小考」看考前重點、做一份模擬小考，錯的題目進閃卡。`,
+          why: `${DAY_NAMES[isoDay(date)]} ${cls.start} 的 ${typeLabel}${typeGap}當場小考 W${covers}${lect ? `（${lect}）` : ' '}的內容${q.best && q.of ? `（${q.of} 次取最好 ${q.best} 次${q.weight ? `，共占 ${q.weight}%` : ''}）` : ''}。到「複習 → 小考」看考前重點、做一份模擬小考，錯的題目進閃卡。`,
           link: { route: 'review', params: { tab: 'quiz', course: c.code } },
         });
         continue;

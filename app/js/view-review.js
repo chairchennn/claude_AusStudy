@@ -254,6 +254,7 @@ function WeekReview({ params }) {
             return html`<section key=${c.code} class=${'wc c-' + (c.color || 'pen')}>
               <header class="wc__head">
                 <${CourseChip} code=${c.code} />
+                ${lectureLabel(c, week, s.timetable, sem) ? html`<span class="wc__lect">${lectureLabel(c, week, s.timetable, sem)}</span>` : null}
                 <span class="muted small">${[...counts].map(([type, xs]) => { const label = CLASS_TYPES[type] || type; return `${xs.length} 堂${/^[A-Za-z]/.test(label) ? ' ' : ''}${label}`; }).join('、') || '這週沒有課'}</span>
                 ${mats.length ? html`<span class="wc__prog small">複習 ${U.sum(prog.map((p) => p.done))}/${U.sum(prog.map((p) => p.total))}</span>` : null}
               </header>
@@ -366,6 +367,24 @@ function QuizReview({ params }) {
 
   const st = quizPrepState(c, sit, s);
   const topic = topicFor(c, sit.covers);
+  const lect = lectureLabel(c, sit.covers, tt, sem);
+  const scope = `W${sit.covers}${lect ? `（${lect}）` : ''}`;
+  // Before the next quiz: recent uploads that probably belong to the tested week but were filed with no week or a
+  // later one (slides for last week uploaded this week), unless their lecture number says the filing is right.
+  const misfiled =
+    next && sit.week === next.week
+      ? s.materials
+          .filter(
+            (m) =>
+              m.courseCode === c.code &&
+              !m.classDate &&
+              (!m.week || Number(m.week) > sit.covers) &&
+              String(m.createdAt || '') >= U.addDays(today, -10) &&
+              guessWeek(m.title || '', c) !== Number(m.week)
+          )
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+          .slice(0, 4)
+      : [];
   const classLabel = CLASS_TYPES[sit.cls.type] || sit.cls.type;
   const when = quizWhen(sit);
   const past = when === '考完了';
@@ -373,7 +392,7 @@ function QuizReview({ params }) {
   const genSheet = () =>
     ai.run(async ({ signal, onProgress }) => {
       const mats = [...st.study, ...st.mats.filter((m) => m.kind === 'exam')].slice(0, 4);
-      const sheet = await AI.quizSheet({ course: c, week: sit.week, covers: sit.covers, topic, date: sit.date, time: sit.cls.start, classLabel, materials: mats, signal, onProgress });
+      const sheet = await AI.quizSheet({ course: c, week: sit.week, covers: sit.covers, lectures: lect, topic, date: sit.date, time: sit.cls.start, classLabel, materials: mats, signal, onProgress });
       await Store.patch('quizprep', st.id, { courseCode: c.code, week: sit.week, covers: sit.covers, date: sit.date, sheet, materialIds: mats.map((m) => m.id), sheetAt: U.nowIso() });
       setOpenSheet(true);
       toast(`W${sit.covers} 考前重點準備好了`, 'ok');
@@ -385,7 +404,7 @@ function QuizReview({ params }) {
       materials: st.mats.map((m) => m.id),
       count: 6,
       auto: true,
-      focus: `W${sit.covers} 小考模擬：像 ${classLabel} 當場寫的小考（定義、計算、證明步驟），不用太長`,
+      focus: `${scope} 小考模擬：像 ${classLabel} 當場寫的小考（定義、計算、證明步驟），不用太長`,
       tag: st.tag,
     });
   const cram = () =>
@@ -410,20 +429,21 @@ function QuizReview({ params }) {
   return html`<div class="stack">
     ${picker}
     <section class=${'qz-hero c-' + (c.color || 'pen')}>
-      <p class="eyebrow">${next && sit.week === next.week ? '下次小考' : past ? '考過的小考' : '之後的小考'} · ${q.label}</p>
+      <div class="qz-hero__top"><${CourseChip} code=${c.code} /><span class="eyebrow">${next && sit.week === next.week ? '下次小考' : past ? '考過的小考' : '之後的小考'} · ${q.label}</span></div>
+      <h2 class="qz-hero__title">考 W${sit.covers} 的內容${lect ? html`<span class="qz-hero__lect">${lect}</span>` : null}</h2>
+      ${topic ? html`<p class="qz-hero__topic">${topic}</p>` : null}
       <div class="qz-hero__when">
         <span class="qz-hero__date">${U.fmtDate(sit.date)} ${sit.cls.start}</span>
         <${Pill} tone=${past ? 'muted' : U.daysBetween(today, sit.date) <= 1 ? 'warn' : 'pen'}>${when}</${Pill}>
       </div>
-      <p class="qz-hero__scope"><${CourseChip} code=${c.code} /> 考 <b>W${sit.covers}</b> 的內容${topic ? `「${topic}」` : ''}</p>
-      <p class="muted small">${[`W${sit.week} ${classLabel}`, sit.cls.location, q.best && q.of ? `${q.of} 次取最好 ${q.best} 次` : '', q.weight ? `共占 ${q.weight}%` : ''].filter(Boolean).join(' · ')}</p>
+      <p class="muted small">${[classLabel, sit.cls.location, q.best && q.of ? `${q.of} 次取最好 ${q.best} 次` : '', q.weight ? `共占 ${q.weight}%` : ''].filter(Boolean).join(' · ')}</p>
       <${Progress} value=${st.done / st.total} tone="ok" label="考前準備進度" />
-      <span class="muted small">考前準備 ${st.done}/${st.total}${st.done === st.total ? ' · 都準備好了，考前再看一次考前重點就好' : ''}</span>
+      <span class="muted small">${past ? '複習進度' : '考前準備'} ${st.done}/${st.total}${st.done === st.total && !past ? ' · 都準備好了，考前再看一次考前重點就好' : ''}</span>
     </section>
 
     <ol class="qz-steps">
       <li class=${U.cls('qz-step', st.steps.slides && 'is-done')}>
-        <div class="qz-step__head"><span class="step__n">${st.steps.slides ? '✓' : '1'}</span><h3>投影片導讀 <span class="muted small">W${sit.covers}</span></h3></div>
+        <div class="qz-step__head"><span class="step__n">${st.steps.slides ? '✓' : '1'}</span><h3>投影片導讀 <span class="muted small">${scope}</span></h3></div>
         ${st.mats.length
           ? html`<ul class="qz-mats">${st.mats.map(
               (m) => html`<li key=${m.id}>
@@ -436,7 +456,16 @@ function QuizReview({ params }) {
                     : html`<${Btn} kind="ghost" size="sm" onClick=${() => setOpenMat(m.id)}>看導讀</${Btn}>`}
               </li>`
             )}</ul>`
-          : html`<p class="muted small">還沒有 W${sit.covers} 的投影片。上傳後，考前重點和模擬小考都會照投影片的內容出。</p>`}
+          : html`<p class="muted small">還沒有 ${scope} 的投影片。上傳後，考前重點和模擬小考都會照投影片的內容出。</p>`}
+        ${misfiled.length
+          ? html`<div class="rc__suggest">
+              <span class="muted small">最近上傳、但不在 W${sit.covers} 的：</span>
+              ${misfiled.map(
+                (m) => html`<button type="button" key=${m.id} class="chip-btn" onClick=${() => Store.patch('materials', m.id, { week: sit.covers, updatedAt: U.nowIso() })}>
+                  「${U.truncate(m.title, 28)}」${m.week ? `（W${m.week}）` : '（沒有週次）'}改成 W${sit.covers}</button>`
+              )}
+            </div>`
+          : null}
         ${uploading
           ? html`<${UploadPanel} course=${c} defaults=${{ week: sit.covers, kind: 'lecture' }} onDone=${() => setUploading(false)} />`
           : html`<div class="row wrap">
@@ -493,14 +522,6 @@ function QuizReview({ params }) {
   </div>`;
 }
 
-/** A number box that keeps what is being typed until it is committed, so a store update cannot overwrite it. */
-function NumInput({ value, onCommit, ...rest }) {
-  const [draft, setDraft] = useState(null);
-  return html`<input type="number" inputmode="decimal" step="0.5" ...${rest} value=${draft ?? value ?? ''}
-    onInput=${(e) => setDraft(e.target.value)}
-    onChange=${(e) => (onCommit(e.target.value.trim()), setDraft(null))} />`;
-}
-
 /** Scores of every sitting, with the best-N-of-M standing. */
 function QuizScores({ course, q, sittings, current, onPick }) {
   const s = useStore();
@@ -535,22 +556,23 @@ function QuizScores({ course, q, sittings, current, onPick }) {
   return html`<${Section} title="小考成績" sub=${q.best && q.of ? `${q.of} 次取最好 ${q.best} 次：可以有 ${q.of - q.best} 次失常或缺席，不用每次都拚滿分。` : '每次小考的分數'}>
     <p class="small qz-standing">${summary}</p>
     <div class="table-wrap"><table class="qz-scores">
-      <thead><tr><th>週次</th><th>日期</th><th>範圍</th><th>得分</th></tr></thead>
+      <thead><tr><th>考試日期</th><th>考的範圍</th><th>得分</th></tr></thead>
       <tbody>${sittings.map((x) => {
         const r = recOf(x) || {};
         const t = topicFor(course, x.covers);
+        const l = lectureLabel(course, x.covers, s.timetable, s.settings.semester);
+        const d = U.fmtDate(x.date, { noWeekday: true });
         return html`<tr key=${x.week} class=${U.cls(x.week === current.week && 'is-on', !x.held && 'is-off', x.date > today && 'is-future')}>
-          <td><button type="button" class="link-plain" aria-label=${`看 W${x.week} 小考準備`} onClick=${() => onPick(x.week)}>W${x.week}</button></td>
-          <td>${U.fmtDate(x.date)}</td>
-          <td>W${x.covers}${t ? html` <span class="muted small">${U.truncate(t, 36)}</span>` : null}</td>
+          <td><button type="button" class="link-plain" aria-label=${`看 ${d} 的小考準備`} onClick=${() => onPick(x.week)}>${U.fmtDate(x.date)}</button></td>
+          <td><b>W${x.covers}</b>${l ? html` <span class="small">${l}</span>` : null}${t ? html` <span class="muted small">${U.truncate(t, 36)}</span>` : null}</td>
           <td>${!x.held
             ? html`<span class="muted small">放假</span>`
             : x.date > today
               ? html`<span class="muted small">—</span>`
               : html`<span class="score-in">
-                  <${NumInput} min="0" aria-label=${`W${x.week} 得分`} placeholder="得分" value=${r.got} onCommit=${(v) => save(x, 'got', v)} />
+                  <${NumInput} min="0" step="0.5" aria-label=${`${d} 得分`} placeholder="得分" value=${r.got} onCommit=${(v) => save(x, 'got', v)} />
                   <span>/</span>
-                  <${NumInput} min="1" aria-label=${`W${x.week} 滿分`} placeholder="滿分" value=${r.max ?? lastMax} onCommit=${(v) => save(x, 'max', v)} />
+                  <${NumInput} min="1" step="0.5" aria-label=${`${d} 滿分`} placeholder="滿分" value=${r.max ?? lastMax} onCommit=${(v) => save(x, 'max', v)} />
                 </span>`}</td>
         </tr>`;
       })}</tbody>
@@ -576,7 +598,7 @@ function QuizSheetView({ prep, course, sit, onClose, onMock }) {
       <span class="muted small">${g.scope_zh}</span>
     </div>
     <header class="material__head">
-      <p class="eyebrow">考前重點 · 考 W${sit.covers} · ${U.fmtDate(sit.date)} ${sit.cls.start} 小考</p>
+      <p class="eyebrow">考前重點 · 考 W${sit.covers}${lectureLabel(course, sit.covers, Store.state.timetable, Store.state.settings.semester) ? `（${lectureLabel(course, sit.covers, Store.state.timetable, Store.state.settings.semester)}）` : ''} · ${U.fmtDate(sit.date)} ${sit.cls.start} 小考</p>
       <h2 class="material__title">${g.title_en}</h2>
       ${g.title_zh ? html`<p class="material__zh">${g.title_zh}</p>` : null}
     </header>

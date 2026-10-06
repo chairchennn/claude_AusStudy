@@ -406,6 +406,17 @@
    "weight": 50,
    "note": "Hurdle（需達門檻）· 身分驗證 · 現場考試"
   },
+  "weeklyQuiz": {
+   "on": true,
+   "label": "Applied class 小考",
+   "classType": "applied",
+   "covers": "prev",
+   "fromWeek": 2,
+   "toWeek": 13,
+   "best": 8,
+   "of": 12,
+   "weight": 30
+  },
   "createdAt": "2026-10-01T00:00:00.000Z",
   "updatedAt": "2026-10-01T00:00:00.000Z"
  },

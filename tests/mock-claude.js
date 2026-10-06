@@ -167,7 +167,33 @@
         { date: 'TOMORROW', course: 'CYBR7002', title: 'CYBR7002：用英文費曼講解 MFA', minutes: 30, kind: 'english', why: '練理論加英文' },
       ],
     },
-    preview: {
+    quizSheet: {
+    title_en: 'Proof by induction: quiz sheet',
+    title_zh: '數學歸納法考前重點',
+    scope_zh: '依 W9 投影片整理：歸納法證明與遞迴定義',
+    must_know: [
+      { en: 'Induction proves P(n) for every n ≥ n₀ with a base case and an inductive step.', zh: '歸納法 = 基礎步驟 + 歸納步驟。' },
+      { en: 'In the inductive step you assume P(k) and prove P(k+1).', zh: '假設 P(k) 成立，證明 P(k+1)。' },
+    ],
+    definitions: [
+      { term: 'inductive hypothesis', zh: '歸納假設', def_en: 'The assumption that P(k) is true for an arbitrary k ≥ n₀.', notation: 'P(k)' },
+      { term: 'base case', zh: '基礎步驟', def_en: 'A direct check that P(n₀) is true.', notation: '' },
+    ],
+    rules: [{ name_en: 'Principle of mathematical induction', zh: '數學歸納法原理', statement: '(P(n₀) ∧ ∀k ≥ n₀ (P(k) → P(k+1))) → ∀n ≥ n₀ P(n)', use_when_zh: '要證明對所有整數 n ≥ n₀ 都成立時' }],
+    patterns: [
+      {
+        type_en: 'Prove a sum formula by induction',
+        type_zh: '用歸納法證明求和公式',
+        steps_en: ['State P(n).', 'Check the base case.', 'Assume P(k).', 'Add the next term and simplify to P(k+1).'],
+        example_q: 'Prove 1 + 2 + … + n = n(n+1)/2.',
+        example_a: 'Base: n = 1 gives 1 = 1. Step: assume the formula for k; add k+1 to get (k+1)(k+2)/2.',
+      },
+    ],
+    traps: [{ en: 'Forgetting to say where the inductive hypothesis is used.', zh: '沒寫出哪裡用到歸納假設。' }],
+    phrases: [{ en: 'By the inductive hypothesis, …', zh: '由歸納假設可知……' }],
+    selfcheck: [{ q_en: 'What do you assume in the inductive step?', q_zh: '歸納步驟要假設什麼？', a_en: 'That P(k) is true for an arbitrary k ≥ n₀.', a_zh: '假設 P(k) 對任意 k ≥ n₀ 成立。' }],
+  },
+  preview: {
       title_en: 'Recursion',
       title_zh: '遞迴',
       basis_zh: '依課程一般內容整理（還沒有投影片）',
@@ -203,6 +229,7 @@
   function respond(p) {
     if (/Write a bilingual study guide/.test(p)) return JSON.stringify(R.summary);
     if (/Write a short PREVIEW guide/.test(p)) return JSON.stringify(R.preview);
+    if (/LAST-MINUTE REVIEW SHEET/.test(p)) return JSON.stringify(R.quizSheet);
     if (/LEARNER'S ANSWER/.test(p)) return JSON.stringify(R.tutor);
     if (/Summarise this tutoring session/.test(p)) return JSON.stringify(R.recap);
     if (/Create a practice set/.test(p)) return JSON.stringify(R.quiz);
@@ -243,7 +270,7 @@
     if (opts.signal && !(opts.signal instanceof AbortSignal)) throw { code: 'invalid_request', message: 'signal must be AbortSignal' };
     if (opts.onText && typeof opts.onText !== 'function') throw { code: 'invalid_request', message: 'onText' };
     window.__prompts.push(text);
-    window.__sampleCalls.push({ tier: opts.modelTier || 'default', bytes: text.length, images: opts.images ? opts.images.length : 0 });
+    window.__sampleCalls.push({ tier: opts.modelTier || 'default', bytes: text.length, images: opts.images ? opts.images.length : 0, prompt: text });
     const out = respond(text);
     await new Promise((r) => setTimeout(r, 150));
     if (opts.signal && opts.signal.aborted) throw { code: 'cancelled', message: 'aborted' };

@@ -23,7 +23,7 @@ function PracticeView({ params }) {
     ]} />
     ${tab === 'quiz' ? (quiz ? html`<${QuizRunner} key=${quiz.id} quiz=${quiz} onNew=${() => setQuizId(null)} />` : html`<${QuizSetup} params=${params} onCreated=${setQuizId} />`) : null}
     ${tab === 'review' ? html`<${Review} params=${params} />` : null}
-    ${tab === 'mistakes' ? html`<${Mistakes} />` : null}
+    ${tab === 'mistakes' ? html`<${Mistakes} params=${params} />` : null}
     ${tab === 'history' ? html`<${History} onOpen=${(id) => (setTab('quiz'), setQuizId(id))} />` : null}
   </div>`;
 }
@@ -39,8 +39,9 @@ function QuizSetup({ params, onCreated }) {
   const kindTypes = QTYPES_BY_KIND[(c && c.kind) || 'theory'] || QTYPES_BY_KIND.theory;
   const [types, setTypes] = useState(params.types || kindTypes.defaults);
   const [picked, setPicked] = useState(params.materials || []);
-  const [count, setCount] = useState(8);
-  const [difficulty, setDifficulty] = useState('standard');
+  const [count, setCount] = useState(params.count || 8);
+  const autoRan = useRef(false);
+  const [difficulty, setDifficulty] = useState(params.difficulty || 'standard');
   const [focus, setFocus] = useState(params.focus || '');
   const [useWeak, setUseWeak] = useState(true);
   const first = useRef(true);
@@ -92,10 +93,19 @@ function QuizSetup({ params, onCreated }) {
         responses: {},
         results: {},
         status: 'open',
+        tag: params.tag || null,
         createdAt: U.nowIso(),
       });
       onCreated(id);
     });
+
+  // From 複習: the learner already chose the material and asked for the quiz, so start generating.
+  useEffect(() => {
+    if (params.auto && !autoRan.current && rt.ai === 'ready' && course) {
+      autoRan.current = true;
+      create();
+    }
+  }, [rt.ai]);
 
   return html`<div class="stack">
     <${AIGate} />
@@ -290,8 +300,11 @@ function QuizRunner({ quiz, onNew }) {
     <${AIError} ai=${ai} onRetry=${submit} />
     <div class="row wrap">
       ${!graded ? html`<${Btn} kind="primary" icon="check" disabled=${ai.busy || !answered} onClick=${submit}>交卷並批改</${Btn}>` : null}
+      ${graded && quiz.tag && quiz.tag.startsWith('quizprep:')
+        ? html`<${Btn} kind="primary" icon="left" onClick=${() => go('review', { tab: 'quiz', course: quiz.courseCode })}>回到小考準備</${Btn}>`
+        : null}
       <${Btn} kind="ghost" icon="plus" onClick=${onNew}>出新的一份</${Btn}>
-      ${graded ? html`<${Btn} kind="ghost" icon="card" onClick=${() => go('practice', { tab: 'mistakes' })}>看錯題本</${Btn}>` : null}
+      ${graded ? html`<${Btn} kind="ghost" icon="card" onClick=${() => go('practice', { tab: 'mistakes', course: quiz.courseCode })}>看錯題本</${Btn}>` : null}
     </div>
   </div>`;
 }
@@ -388,7 +401,8 @@ function Review({ params }) {
   const [course, setCourse] = useState(params.course || 'all');
   const [kind, setKind] = useState(params.kind || 'all');
   const [reverse, setReverse] = useState(false);
-  const [queue, setQueue] = useState(null);
+  // A given set of cards (e.g. last week's before a quiz) starts right away, due or not.
+  const [queue, setQueue] = useState(params.cards && params.cards.length ? params.cards.slice(0, 40) : null);
   const [flipped, setFlipped] = useState(false);
   const [doneN, setDoneN] = useState(0);
   const [mode, setMode] = useState('study');
@@ -432,13 +446,14 @@ function Review({ params }) {
         <h3>這一輪複習完了</h3>
         <p class="muted">複習了 ${doneN} 張。${due.length ? `還有 ${due.length} 張到期。` : '今天的卡片都完成了。'}</p>
         <div class="row center wrap">
-          ${due.length ? html`<${Btn} kind="primary" onClick=${() => start(due.map((c) => c.id))}>再來一輪</${Btn}>` : null}
+          ${params.back ? html`<${Btn} kind="primary" onClick=${() => go(params.back.route, params.back.params || {})}>${params.back.label || '回上一頁'}</${Btn}>` : null}
+          ${due.length ? html`<${Btn} kind=${params.back ? 'ghost' : 'primary'} onClick=${() => start(due.map((c) => c.id))}>再來一輪</${Btn}>` : null}
           <${Btn} kind="ghost" onClick=${() => setQueue(null)}>回到閃卡</${Btn}>
         </div>
       </div>`;
     const preview = SRS.preview(current.srs, today, examDateFor(current.courseCode));
     return html`<div class="stack">
-      <div class="row between"><span class="muted small">剩 ${queue.length} 張 · 已複習 ${doneN}</span>
+      <div class="row between"><span class="muted small">${params.cards && params.label ? `${params.label} · ` : ''}剩 ${queue.length} 張 · 已複習 ${doneN}</span>
         <${Btn} kind="ghost" size="sm" onClick=${() => setQueue(null)}>結束</${Btn}></div>
       <${FlashCard} card=${current} flipped=${flipped} reverse=${reverse} onFlip=${() => setFlipped(true)} />
       ${flipped
@@ -561,9 +576,9 @@ function CardEdit({ card, onDone }) {
 }
 
 /* ---------- mistake book ---------- */
-function Mistakes() {
+function Mistakes({ params = {} }) {
   const s = useStore();
-  const [course, setCourse] = useState('all');
+  const [course, setCourse] = useState(params.course || 'all');
   const list = s.cards
     .filter((c) => c.kind === 'mistake' && (course === 'all' || c.courseCode === course))
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));

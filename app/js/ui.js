@@ -1,7 +1,7 @@
 /* ui.js — shared components: router, toasts, icons, buttons, chips, AI request hook, Markdown, code blocks. */
 
 /* ---------- router (in-memory; the bare #tab token deep-links a tab) ---------- */
-const ROUTES = ['home', 'courses', 'tutor', 'practice', 'plan', 'methods', 'settings'];
+const ROUTES = ['home', 'review', 'courses', 'tutor', 'practice', 'plan', 'methods', 'settings'];
 const Router = (() => {
   const fromHash = () => {
     try {
@@ -34,8 +34,12 @@ const Router = (() => {
 })();
 const go = Router.go;
 function useRoute() {
-  const [s, setS] = useState({ ...Router.state });
-  useEffect(() => Router.onChange(setS), []);
+  const [s, setS] = useState(() => ({ ...Router.state }));
+  useLayoutEffect(() => {
+    const off = Router.onChange(setS);
+    setS((prev) => (prev.seq === Router.state.seq ? prev : { ...Router.state }));
+    return off;
+  }, []);
   return s;
 }
 
@@ -53,13 +57,17 @@ const Toasts = (() => {
       emit();
     }, ms);
   };
-  return { push, onChange: (fn) => (listeners.add(fn), () => listeners.delete(fn)) };
+  return { push, current: () => items, onChange: (fn) => (listeners.add(fn), () => listeners.delete(fn)) };
 })();
 const toast = (text, tone, ms) => Toasts.push(text, tone, ms);
 
 function ToastRegion() {
-  const [items, setItems] = useState([]);
-  useEffect(() => Toasts.onChange(setItems), []);
+  const [items, setItems] = useState(Toasts.current);
+  useLayoutEffect(() => {
+    const off = Toasts.onChange(setItems);
+    setItems((prev) => (prev === Toasts.current() ? prev : Toasts.current().slice()));
+    return off;
+  }, []);
   return html`<div class="toasts" role="status" aria-live="polite">
     ${items.map((t) => html`<div key=${t.id} class=${'toast toast--' + t.tone}>${t.text}</div>`)}
   </div>`;

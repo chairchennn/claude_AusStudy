@@ -492,6 +492,10 @@ english_changes: at most 4, only for English prose answers; [] for code or maths
         weak_topics: [...new Set(weak)].slice(-6),
         cards_due_today: due,
         needs_preview: !!c.preview,
+        weekly_quiz: (() => {
+          const q = weeklyQuizOf(c);
+          return q ? `in-class quiz every week (weeks ${q.fromWeek}-${q.toWeek}) in the ${CLASS_TYPES[q.classType] || q.classType}, on ${q.covers === 'this' ? "that week's" : "the previous week's"} content${q.best && q.of ? `; best ${q.best} of ${q.of} count` : ''}${q.weight ? `; ${q.weight}% in total` : ''}` : null;
+        })(),
       };
     });
     const timetable = (s.timetable.classes || []).map(classLine);
@@ -520,6 +524,7 @@ RULES
 - Programming and maths: practice problems, code tracing, past exam questions; timed practice closer to exams.
 - English: at least 3 days a week include an English answering task (kind "english").
 - Courses with needs_preview=true are previewed before lectures; the preview and class-prep tasks already exist, so plan around them instead of adding more previews.
+- Courses with weekly_quiz get a quiz-prep task the day before each quiz (also already in the list); keep that evening light for other work.
 - Soon after each lecture (within 24 hours), a short review: 書僮問答 5 題 or 導讀 of that week's slides. Lectures marked "watch recording" must be watched within 2 days.
 - Task titles in Traditional Chinese, specific and doable, starting with the course code, e.g. "MATH7861：用書僮做 6 題歸納法證明". 20-90 minutes each.
 
@@ -659,5 +664,65 @@ Counts: prerequisites 2-4, key_terms 5-8, watch_for 3-4, warmup 2-3 (programming
     };
   }
 
-  return { profile, preview, summarize, tutorTurn, openingQuestion, recap, chat, explain, transcribe, generateQuiz, grade, plan, parseInfo, TYPE_RULES };
+  /* ---------- 考前重點 / last-minute sheet for a weekly quiz ---------- */
+  async function quizSheet({ course, week, covers, topic, date, time, classLabel, materials, signal, onProgress }) {
+    const budget = Math.floor(42000 / Math.max(1, materials.length));
+    const blocks = [];
+    for (const m of materials) blocks.push(materialBlock(m, Extract.sampleEvenly(await Store.getText(m.id), budget)));
+    const mistakes = Store.state.cards
+      .filter((c) => c.courseCode === course.code && c.kind === 'mistake')
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .slice(0, 6)
+      .map((c) => `- ${U.truncate(c.front, 160)}${c.extra && c.extra.topic ? ` [${c.extra.topic}]` : ''}`)
+      .join('\n');
+    const prompt = `${profile()}
+
+${courseBlock(course)}
+${KIND_STYLE[course.kind] || ''}
+
+TASK
+The learner sits a short in-class quiz in the week ${week} ${classLabel || 'class'}${date ? ` on ${date}${time ? ` at ${time}` : ''}` : ''}. It tests the week ${covers} content${topic ? ` ("${topic}")` : ''}. Write a one-page LAST-MINUTE REVIEW SHEET (考前重點) to read in 15-20 minutes right before the quiz.
+Focus on what a short quiz on this content can ask: definitions to state precisely, rules and theorems to apply, and the standard question types with the exact steps to answer them. Keep every item short; this is a checklist, not a textbook.
+${blocks.length ? `${NOTE_EXTRACTED}
+${blocks.join('\n\n')}` : `No slides are available: use the standard content of this topic in a course like this, and say so in "scope_zh".`}
+${mistakes ? `Recent mistakes the learner made in this course (cover the matching traps):\n${mistakes}` : ''}
+
+Return ONLY one JSON object:
+{
+  "title_en": "topic title",
+  "title_zh": "中文標題",
+  "scope_zh": "one line: what this quiz covers (or that no slides were given)",
+  "must_know": [{"en": "core fact in one sentence", "zh": "中文"}],
+  "definitions": [{"term": "English term", "zh": "中文", "def_en": "precise definition as it should be written in the quiz", "notation": "symbols, or empty"}],
+  "rules": [{"name_en": "rule or theorem", "zh": "中文名稱", "statement": "the rule in symbols or one sentence", "use_when_zh": "什麼時候用"}],
+  "patterns": [{"type_en": "question type", "type_zh": "題型", "steps_en": ["step"], "example_q": "a short example question", "example_a": "its worked answer, step by step, short"}],
+  "traps": [{"en": "common mistake", "zh": "中文"}],
+  "phrases": [{"en": "a sentence pattern for writing answers or proofs in English", "zh": "中文"}],
+  "selfcheck": [{"q_en": "quick question", "q_zh": "中文提示", "a_en": "short answer", "a_zh": "中文解答"}]
+}
+Counts: must_know 4-7, definitions 4-8, rules 2-6, patterns 2-4 (steps 3-6 each), traps 3-5, phrases 3-5, selfcheck 4-5 (answerable in under a minute each).`;
+    const r = await call(prompt, { tier: 'default', signal, onProgress });
+    return {
+      title_en: str(r.title_en) || topic || `Week ${covers}`,
+      title_zh: str(r.title_zh),
+      scope_zh: str(r.scope_zh),
+      must_know: arr(r.must_know).map(pair).filter((x) => x.en),
+      definitions: arr(r.definitions)
+        .map((d) => ({ term: str(d.term), zh: str(d.zh), def_en: str(d.def_en), notation: str(d.notation) }))
+        .filter((d) => d.term),
+      rules: arr(r.rules)
+        .map((x) => ({ name_en: str(x.name_en), zh: str(x.zh), statement: str(x.statement), use_when_zh: str(x.use_when_zh) }))
+        .filter((x) => x.name_en || x.statement),
+      patterns: arr(r.patterns)
+        .map((x) => ({ type_en: str(x.type_en), type_zh: str(x.type_zh), steps_en: arr(x.steps_en).map(str).filter(Boolean), example_q: str(x.example_q), example_a: str(x.example_a) }))
+        .filter((x) => x.type_en),
+      traps: arr(r.traps).map(pair).filter((x) => x.en),
+      phrases: arr(r.phrases).map(pair).filter((x) => x.en),
+      selfcheck: arr(r.selfcheck)
+        .map((x) => ({ q_en: str(x.q_en), q_zh: str(x.q_zh), a_en: str(x.a_en), a_zh: str(x.a_zh) }))
+        .filter((x) => x.q_en),
+    };
+  }
+
+  return { profile, preview, quizSheet, summarize, tutorTurn, openingQuestion, recap, chat, explain, transcribe, generateQuiz, grade, plan, parseInfo, TYPE_RULES };
 })();

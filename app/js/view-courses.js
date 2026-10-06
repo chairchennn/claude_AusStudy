@@ -33,7 +33,7 @@ function splitForStorage(text, maxBytes = 220000) {
   return parts;
 }
 
-async function saveMaterial({ courseCode, title, kind, week, text, source }) {
+async function saveMaterial({ courseCode, title, kind, week, text, source, extra = {} }) {
   const parts = splitForStorage(text);
   const ids = [];
   for (let i = 0; i < parts.length; i++) {
@@ -45,6 +45,7 @@ async function saveMaterial({ courseCode, title, kind, week, text, source }) {
       kind,
       week: week || null,
       source: { ...(source || {}), chars: parts[i].length },
+      ...extra,
       summary: null,
       createdAt: U.nowIso(),
       updatedAt: U.nowIso(),
@@ -232,7 +233,7 @@ function MaterialRow({ m, onOpen }) {
       <span class="mat__week">${m.week ? 'W' + m.week : '—'}</span>
       <span class="mat__text">
         <span class="mat__title">${m.title}</span>
-        <span class="mat__meta">${MATERIAL_KINDS[m.kind] || m.kind} · ${U.fmtChars((m.source && m.source.chars) || 0)}${m.source && m.source.units ? ` · ${m.source.units} ${m.source.unitLabel || '頁'}` : ''}</span>
+        <span class="mat__meta">${MATERIAL_KINDS[m.kind] || m.kind}${m.classDate ? ` · ${U.fmtDate(m.classDate)}上課` : ''} · ${U.fmtChars((m.source && m.source.chars) || 0)}${m.source && m.source.units ? ` · ${m.source.units} ${m.source.unitLabel || '頁'}` : ''}</span>
       </span>
       ${m.summary ? html`<${Pill} tone="ok">已導讀</${Pill}>` : html`<${Pill} tone="muted">未導讀</${Pill}>`}
     </button>
@@ -240,12 +241,14 @@ function MaterialRow({ m, onOpen }) {
 }
 
 /* ---------- upload ---------- */
-function UploadPanel({ course, onDone }) {
+function UploadPanel({ course, onDone, defaults = {} }) {
   const [mode, setMode] = useState('file');
   const [items, setItems] = useState([]);
   const [busy, setBusy] = useState(false);
   const [drag, setDrag] = useState(false);
-  const [paste, setPaste] = useState({ title: '', kind: 'notes', week: '', text: '' });
+  const [paste, setPaste] = useState({ title: '', kind: defaults.kind || 'notes', week: defaults.week || '', text: '' });
+  // Uploading from 複習 ties the file to that class: its week and date win over guesses from the file name.
+  const extra = defaults.classDate ? { classDate: defaults.classDate, classId: defaults.classId || null } : {};
   const ocr = useAI();
   const rt = useRuntime();
 
@@ -257,7 +260,14 @@ function UploadPanel({ course, onDone }) {
     const start = items.length;
     setItems((xs) => [
       ...xs,
-      ...list.map((f) => ({ file: f, title: baseName(f.name), kind: guessKind(f.name), week: guessWeek(f.name) || '', status: 'reading', progress: '' })),
+      ...list.map((f) => ({
+        file: f,
+        title: baseName(f.name),
+        kind: defaults.kind && guessKind(f.name) === 'lecture' ? defaults.kind : guessKind(f.name),
+        week: defaults.week || guessWeek(f.name) || '',
+        status: 'reading',
+        progress: '',
+      })),
     ]);
     for (let k = 0; k < list.length; k++) {
       const i = start + k;
@@ -306,6 +316,7 @@ function UploadPanel({ course, onDone }) {
           week: Number(it.week) || null,
           text: it.result.text,
           source: { name: it.file.name, type: it.result.kind, units: it.result.units, unitLabel: it.result.unitLabel, ocr: !!it.result.ocr },
+          extra,
         });
         ids.push(...got);
       }
@@ -329,6 +340,7 @@ function UploadPanel({ course, onDone }) {
         week: Number(paste.week) || null,
         text: Extract.tidy(paste.text),
         source: { name: '貼上的文字', type: 'paste', units: 1, unitLabel: '段文字' },
+        extra,
       });
       toast('已存入', 'ok');
       onDone(ids);
@@ -413,7 +425,7 @@ function UploadPanel({ course, onDone }) {
 }
 
 /* ---------- material + 導讀 ---------- */
-function MaterialView({ material: m, course, onClose }) {
+function MaterialView({ material: m, course, onClose, backLabel = '← 回到講義列表' }) {
   const ai = useAI();
   const rt = useRuntime();
   const [showText, setShowText] = useState(false);
@@ -455,7 +467,7 @@ function MaterialView({ material: m, course, onClose }) {
 
   return html`<article class="material">
     <div class="row between wrap">
-      <button type="button" class="link" onClick=${onClose}>← 回到講義列表</button>
+      <button type="button" class="link" onClick=${onClose}>${backLabel}</button>
       <div class="row wrap">
         <${Btn} kind="ghost" size="sm" icon="edit" onClick=${() => setEdit(!edit)}>編輯</${Btn}>
         <${ConfirmBtn} label="刪除" onConfirm=${remove} />
@@ -622,6 +634,51 @@ function AssessmentEditor({ course }) {
     </div>
     <div class="row"><${Btn} kind="ghost" icon="plus" onClick=${add}>新增評量</${Btn}>
       <span class="muted small">合計 ${U.sum(list.map((a) => a.weight)) + (Number(exam.weight) || 0)}%</span></div>
+    <${WeeklyQuizEditor} course=${course} />
+  </div>`;
+}
+
+/** Weekly in-class quiz (e.g. MATH7861: each applied class tests last week's content). */
+function WeeklyQuizEditor({ course }) {
+  const s = useStore();
+  const wq = { ...QUIZ_DEFAULTS, ...(course.weeklyQuiz || {}) };
+  const set = (patch) => Store.patch('courses', course.code, { weeklyQuiz: { ...wq, ...patch }, updatedAt: U.nowIso() });
+  const types = [...new Set(s.timetable.classes.filter((c) => c.courseCode === course.code).map((c) => c.type))];
+  const num = (v) => (v === '' ? 0 : Math.max(0, Math.round(Number(v)) || 0));
+  const id = (k) => `wq-${k}-${course.code}`;
+  return html`<div class="panel exam-box">
+    <div class="exam-box__label">每週小考</div>
+    <label class="check"><input type="checkbox" id=${id('on')} checked=${!!wq.on} onChange=${(e) => set({ on: e.target.checked })} />
+      這門課每週有小考：在「複習 → 小考」準備，考前一天排複習任務</label>
+    ${wq.on
+      ? html`<div class="form-grid">
+          <${Field} label="在哪一堂考" id=${id('cls')}>
+            <select id=${id('cls')} value=${wq.classType} onChange=${(e) => set({ classType: e.target.value })}>
+              ${[...new Set([...types, wq.classType])].map((t) => html`<option value=${t}>${CLASS_TYPES[t] || t}</option>`)}
+            </select>
+          </${Field}>
+          <${Field} label="考的範圍" id=${id('covers')}>
+            <select id=${id('covers')} value=${wq.covers} onChange=${(e) => set({ covers: e.target.value })}>
+              <option value="prev">上週的內容</option>
+              <option value="this">這週的內容</option>
+            </select>
+          </${Field}>
+          <${Field} label="第幾週到第幾週" id=${id('from')}>
+            <span class="row nowrap"><input id=${id('from')} class="w-num" type="number" min="1" max="13" value=${wq.fromWeek} onChange=${(e) => set({ fromWeek: num(e.target.value) || 1 })} />
+              <span>–</span><input aria-label="到第幾週" id=${id('to')} class="w-num" type="number" min="1" max="13" value=${wq.toWeek} onChange=${(e) => set({ toWeek: num(e.target.value) || 13 })} /></span>
+          </${Field}>
+          <${Field} label="取最好幾次 / 共幾次" id=${id('best')}>
+            <span class="row nowrap"><input id=${id('best')} class="w-num" type="number" min="0" value=${wq.best || ''} onChange=${(e) => set({ best: num(e.target.value) })} />
+              <span>/</span><input aria-label="共幾次" id=${id('of')} class="w-num" type="number" min="0" value=${wq.of || ''} onChange=${(e) => set({ of: num(e.target.value) })} /></span>
+          </${Field}>
+          <${Field} label="共占 %" id=${id('w')}>
+            <input id=${id('w')} class="w-num" type="number" min="0" max="100" value=${wq.weight || ''} onChange=${(e) => set({ weight: num(e.target.value) })} />
+          </${Field}>
+        </div>
+        ${types.includes(wq.classType)
+          ? html`<${Btn} kind="ghost" size="sm" icon="right" onClick=${() => go('review', { tab: 'quiz', course: course.code })}>到小考準備</${Btn}>`
+          : html`<p class="muted small">課表裡還沒有這門課的 ${CLASS_TYPES[wq.classType] || wq.classType}，先到計畫頁把它加進課表。</p>`}`
+      : null}
   </div>`;
 }
 

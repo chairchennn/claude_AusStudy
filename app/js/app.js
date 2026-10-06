@@ -2,6 +2,7 @@
 
 const NAV = [
   { id: 'home', label: '今日', icon: 'home' },
+  { id: 'review', label: '複習', icon: 'flip' },
   { id: 'courses', label: '課程', icon: 'courses' },
   { id: 'tutor', label: '書僮', icon: 'tutor' },
   { id: 'practice', label: '練習', icon: 'practice' },
@@ -11,6 +12,7 @@ const NAV = [
 
 const VIEWS = {
   home: HomeView,
+  review: ReviewView,
   courses: CoursesView,
   tutor: TutorView,
   practice: PracticeView,
@@ -59,6 +61,7 @@ function App() {
     <header class="topbar">
       <button type="button" class="brand brand--small" onClick=${() => go('home')}><span class="brand__mark">書僮</span></button>
       <span class="topbar__week">${phase.label}</span>
+      <button type="button" class=${U.cls('iconbtn', r.route === 'methods' && 'is-on')} aria-label="讀書方法" onClick=${() => go('methods')}><${Icon} name="methods" /></button>
       <button type="button" class=${U.cls('iconbtn', r.route === 'settings' && 'is-on')} aria-label="設定" onClick=${() => go('settings')}><${Icon} name="settings" /></button>
     </header>
 
@@ -71,7 +74,7 @@ function App() {
     </main>
 
     <nav class="tabbar" aria-label="主要">
-      ${NAV.map((n) => html`<${NavButton} key=${n.id} item=${n} active=${r.route === n.id} badge=${badgeFor(n.id)} variant="tabbar__item" />`)}
+      ${NAV.filter((n) => n.id !== 'methods').map((n) => html`<${NavButton} key=${n.id} item=${n} active=${r.route === n.id} badge=${badgeFor(n.id)} variant="tabbar__item" />`)}
     </nav>
     <${ToastRegion} />
   </div>`;

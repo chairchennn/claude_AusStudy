@@ -59,6 +59,60 @@ const topicFor = (course, week) => {
   return hit ? hit.topic : '';
 };
 
+/* ---------- weekly quizzes (e.g. MATH7861: an in-class quiz each week on the previous week's content) ---------- */
+const QUIZ_DEFAULTS = { on: false, label: '每週小考', classType: 'applied', covers: 'prev', fromWeek: 2, toWeek: 13, best: 0, of: 0, weight: 0 };
+
+/** The course's weekly-quiz settings with defaults filled in, or null when it has none. */
+const weeklyQuizOf = (course) => (course && course.weeklyQuiz && course.weeklyQuiz.on ? { ...QUIZ_DEFAULTS, ...course.weeklyQuiz } : null);
+
+/** The timetable class the quiz is sat in (the first class of that type in the week). */
+function quizClassOf(course, timetable) {
+  const q = weeklyQuizOf(course);
+  if (!q || !timetable) return null;
+  return (
+    (timetable.classes || [])
+      .filter((c) => c.courseCode === course.code && c.type === q.classType)
+      .sort((a, b) => Number(a.day) - Number(b.day) || minutesOf(a.start) - minutesOf(b.start))[0] || null
+  );
+}
+
+/**
+ * Every sitting of a course's weekly quiz this semester: [{week, date, cls, covers, held}].
+ * `covers` is the teaching week whose content is tested; `held` is false on public holidays.
+ */
+function quizSittings(course, timetable, sem) {
+  const q = weeklyQuizOf(course);
+  const cls = quizClassOf(course, timetable);
+  if (!q || !cls) return [];
+  return semesterWeeks(sem)
+    .filter((w) => w.phase === 'teaching' && w.week >= q.fromWeek && w.week <= q.toWeek)
+    .map((w) => {
+      const date = U.addDays(w.start, Number(cls.day) - 1);
+      return { week: w.week, date, cls, covers: q.covers === 'this' ? w.week : Math.max(1, w.week - 1), held: isClassDay(date, sem) };
+    });
+}
+
+/** The next sitting that has not finished yet (today's counts until the class ends). */
+function nextQuizSitting(course, timetable, sem, today = U.today(), nowMin = null) {
+  const now = nowMin == null ? new Date().getHours() * 60 + new Date().getMinutes() : nowMin;
+  return quizSittings(course, timetable, sem).find((x) => x.held && (x.date > today || (x.date === today && now < minutesOf(x.cls.end)))) || null;
+}
+
+/** Best `best` of the recorded scores, as a fraction (0-1), with how many count. */
+function quizStanding(q, records) {
+  const pct = records.filter((r) => r && Number(r.max) > 0 && r.got !== '' && r.got != null).map((r) => U.clamp(Number(r.got) / Number(r.max), 0, 1));
+  const keep = q.best ? pct.sort((a, b) => b - a).slice(0, q.best) : pct;
+  const avg = keep.length ? keep.reduce((a, b) => a + b, 0) / keep.length : null;
+  return {
+    recorded: pct.length,
+    counted: keep.length,
+    avg,
+    // marks already secured (missing sittings count as 0) and the final mark if the average holds
+    banked: avg != null && q.weight ? (keep.reduce((a, b) => a + b, 0) / (q.best || keep.length)) * q.weight : null,
+    projected: avg != null && q.weight ? avg * q.weight : null,
+  };
+}
+
 /**
  * Tasks implied by the timetable between `from` and `to`:
  *  - 預習 the day before the first lecture of each week, for courses marked `preview`;
@@ -97,6 +151,23 @@ function buildClassTasks({ timetable, courses, sem, from, to, existingKeys = [] 
           week,
           why: '這堂和其他課衝堂，用錄影補上；兩天內看完，邊看邊記下不懂的地方問書僮。',
         });
+      }
+      const q = weeklyQuizOf(c);
+      if (q && cls.type === q.classType && week >= q.fromWeek && week <= q.toWeek) {
+        const covers = q.covers === 'this' ? week : Math.max(1, week - 1);
+        const coversTopic = topicFor(c, covers);
+        add(`prep-${c.code}-${date}`, {
+          date: dayBefore(date),
+          courseCode: c.code,
+          title: `${c.code}：小考前複習 W${covers}${coversTopic ? `「${coversTopic}」` : ''}（考前重點＋模擬小考）`,
+          minutes: 40,
+          kind: 'practice',
+          priority: 1,
+          week,
+          why: `${DAY_NAMES[isoDay(date)]} ${cls.start} 的 ${typeLabel}${typeGap}當場小考 W${covers} 的內容${q.best && q.of ? `（${q.of} 次取最好 ${q.best} 次${q.weight ? `，共占 ${q.weight}%` : ''}）` : ''}。到「複習 → 小考」看考前重點、做一份模擬小考，錯的題目進閃卡。`,
+          link: { route: 'review', params: { tab: 'quiz', course: c.code } },
+        });
+        continue;
       }
       if (!c.preview) continue;
       if (cls.type === 'lecture') {

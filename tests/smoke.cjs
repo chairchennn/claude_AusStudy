@@ -48,10 +48,10 @@ function watch(page, label) {
   });
 }
 
-async function newPage(browser, { mock = true, width = 1280, height = 900, scheme = 'light', seed = SEED } = {}) {
+async function newPage(browser, { mock = true, width = 1280, height = 900, scheme = 'light', seed = SEED, time = '2026-10-01T09:00:00+10:00' } = {}) {
   const ctx = await browser.newContext({ viewport: { width, height }, colorScheme: scheme, locale: 'zh-TW', timezoneId: 'Australia/Brisbane' });
   const page = await ctx.newPage();
-  await page.clock.setFixedTime(new Date('2026-10-01T09:00:00+10:00'));
+  await page.clock.setFixedTime(new Date(time));
   await routeAll(page);
   if (mock) {
     await page.addInitScript((s) => (window.__SEED__ = s), seed);
@@ -60,7 +60,9 @@ async function newPage(browser, { mock = true, width = 1280, height = 900, schem
   return { ctx, page };
 }
 
+// ONLY=<text> runs just the steps whose name contains it (use it for steps that open their own page).
 const step = async (name, fn) => {
+  if (process.env.ONLY && !name.includes(process.env.ONLY)) return;
   process.stdout.write(`• ${name} … `);
   await fn();
   console.log('ok');
@@ -215,6 +217,7 @@ const noOverflow = async (page, label) => {
       await page.getByRole('button', { name: '產生預習與課前任務' }).click();
       await page.getByText(/加入 19 項預習/).waitFor();
       await page.getByText('CSSE7030：預習 W10（預習導讀＋暖身題）').first().waitFor();
+      await page.getByText('MATH7861：小考前複習 W9（考前重點＋模擬小考）').first().waitFor();
       await page.getByRole('button', { name: '產生預習與課前任務' }).click();
       await page.getByText('這些任務都已經在清單裡了').waitFor();
     });
@@ -288,6 +291,119 @@ const noOverflow = async (page, label) => {
       console.log(`(${calls.length} Claude calls, largest ${Math.max(...calls.map((c) => c.bytes))} chars)`);
     });
 
+    await step('複習: upload today\'s slides, then 導讀 → 閃卡 → 問答 → 小測驗, weekly view', async () => {
+      const { ctx, page: p } = await newPage(browser, { time: '2026-10-06T15:30:00+10:00' });
+      watch(p, 'review');
+      await p.goto('http://app.test/');
+      await p.locator('.classes').getByRole('heading', { name: '今天的課' }).waitFor();
+      await p.locator('.classes').getByRole('button', { name: '上傳投影片複習' }).first().waitFor();
+      await p.locator('.rail__nav').getByRole('button', { name: '複習' }).click();
+      const card = p.locator('.rc', { hasText: 'CSSE7030' });
+      await card.getByRole('button', { name: '上傳今天的投影片' }).click();
+      await p.setInputFiles('#up-file', path.join(FIX, 'CYBR7002 Lecture 8 Cryptography.pdf'));
+      await p.getByRole('button', { name: '儲存 1 份' }).click();
+      await card.locator('.ms').waitFor();
+      const mat = await p.evaluate(() => [...window.__db.entries()].find(([k]) => k.startsWith('materials/'))[1]);
+      if (mat.week !== 10 || mat.classDate !== '2026-10-06' || mat.courseCode !== 'CSSE7030' || !mat.classId)
+        throw new Error('material not tied to the class: ' + JSON.stringify({ week: mat.week, classDate: mat.classDate, classId: mat.classId }));
+      await card.getByRole('button', { name: '下一步：導讀' }).click();
+      await p.getByRole('button', { name: '產生導讀' }).click();
+      await p.getByRole('heading', { name: 'Mathematical Induction' }).waitFor();
+      await p.getByRole('button', { name: '← 回到這天的複習' }).click();
+      await card.locator('.step', { hasText: '閃卡' }).getByRole('button').click();
+      await p.getByText(/加入 2 張名詞卡/).waitFor();
+      await card.getByRole('button', { name: '下一步：問答' }).click();
+      await p.fill('#tutor-answer', 'The base case start the chain.');
+      await p.getByRole('button', { name: '送出' }).click();
+      await p.locator('.fb').first().waitFor();
+      await p.locator('.rail__nav').getByRole('button', { name: '複習' }).click();
+      await card.locator('.step', { hasText: '問答 1/3' }).waitFor();
+      await card.getByRole('button', { name: '下一步：問答' }).click();
+      await p.locator('.turn').first().waitFor();
+      const sessions = await p.evaluate(() => [...window.__db.keys()].filter((k) => k.startsWith('sessions/')).length);
+      if (sessions !== 1) throw new Error('expected the open session to resume, got ' + sessions + ' sessions');
+      await p.locator('.rail__nav').getByRole('button', { name: '複習' }).click();
+      await card.locator('.step', { hasText: '小測驗' }).getByRole('button').click();
+      await p.getByRole('heading', { name: 'Induction and logic practice' }).waitFor();
+      await p.locator('.rail__nav').getByRole('button', { name: '複習' }).click();
+      // Day navigation: step back one class day, then return.
+      await p.getByRole('button', { name: '上一個上課日' }).click();
+      await p.locator('.day-nav__date', { hasText: '9 月 25 日' }).waitFor(); // 10/5 public holiday, then the break
+      await p.getByRole('button', { name: '回到今天' }).click();
+      await p.locator('.day-nav__date', { hasText: '10 月 6 日' }).waitFor();
+      if (await p.getByRole('button', { name: '回到今天' }).count()) throw new Error('「回到今天」 should hide on today');
+      await p.screenshot({ path: path.join(OUT, '10-review-day.png'), fullPage: true });
+      await p.getByRole('tab', { name: '每週' }).click();
+      await p.locator('.wc', { hasText: 'CSSE7030' }).locator('.ms').waitFor();
+      await p.getByRole('button', { name: /出這週的複習題/ }).waitFor();
+      await p.screenshot({ path: path.join(OUT, '11-review-week.png'), fullPage: true });
+      await ctx.close();
+    });
+
+    await step('小考: tomorrow\'s quiz → W9 slides, 考前重點, mock quiz, cards, score', async () => {
+      const { ctx, page: p } = await newPage(browser, { time: '2026-10-06T18:00:00+10:00' });
+      watch(p, 'quiz');
+      await p.goto('http://app.test/');
+      await p.locator('.sugg__item', { hasText: '明天 12:00 小考（考 W9）' }).click();
+      const hero = p.locator('.qz-hero');
+      await hero.getByText('10/7 週三 12:00').waitFor();
+      await hero.getByText('明天 12:00').waitFor();
+      await hero.locator('b', { hasText: 'W9' }).waitFor();
+      // Upload last week's slides from the quiz page: they are filed under W9.
+      await p.getByRole('button', { name: '上傳 W9 投影片' }).click();
+      await p.setInputFiles('#up-file', path.join(FIX, 'CYBR7002 Lecture 8 Cryptography.pdf'));
+      await p.getByRole('button', { name: '儲存 1 份' }).click();
+      await p.locator('.qz-mats li').first().waitFor();
+      const mat = await p.evaluate(() => [...window.__db.entries()].filter(([k]) => k.startsWith('materials/')).map(([, v]) => v)[0]);
+      if (mat.week !== 9 || mat.courseCode !== 'MATH7861') throw new Error('quiz upload not filed under MATH7861 W9: ' + JSON.stringify({ week: mat.week, course: mat.courseCode }));
+      // 考前重點
+      await p.getByRole('button', { name: '產生考前重點' }).click();
+      await p.getByRole('heading', { name: 'Proof by induction: quiz sheet' }).waitFor();
+      const call = await p.evaluate(() => window.__sampleCalls.filter((c) => /LAST-MINUTE REVIEW SHEET/.test(c.prompt || '')).slice(-1)[0]);
+      if (!call || !/tests the week 9 content/.test(call.prompt)) throw new Error('quiz sheet prompt should name the covered week');
+      await p.getByRole('button', { name: '看答案' }).click();
+      await p.locator('.warmup__ans', { hasText: 'That P(k) is true for an arbitrary k ≥ n₀.' }).waitFor();
+      await p.getByRole('button', { name: '全部加入閃卡' }).click();
+      await p.getByText(/加入 2 張名詞卡/).waitFor();
+      await p.screenshot({ path: path.join(OUT, '12-quiz-sheet.png'), fullPage: true });
+      await p.getByRole('button', { name: '← 回到小考準備' }).click();
+      await p.locator('.qz-step.is-done', { hasText: '考前重點' }).waitFor();
+      // Mock quiz: generated from the W9 slides and tagged to this sitting.
+      await p.getByRole('button', { name: '做一份模擬小考' }).click();
+      await p.getByRole('heading', { name: 'Induction and logic practice' }).waitFor();
+      const quiz = await p.evaluate(() => [...window.__db.entries()].filter(([k]) => k.startsWith('quizzes/')).map(([, v]) => v).slice(-1)[0]);
+      if (quiz.tag !== 'quizprep:MATH7861-W10' || !(quiz.materialIds || []).length) throw new Error('mock quiz not tied to the sitting: ' + JSON.stringify({ tag: quiz.tag, mats: quiz.materialIds }));
+      await p.locator('.rail__nav').getByRole('button', { name: '複習' }).click();
+      await p.getByRole('tab', { name: '小考' }).click();
+      await p.getByRole('button', { name: '繼續沒交卷的那份' }).waitFor();
+      // Cards from the W9 sheet: one round before the quiz completes the step.
+      await p.getByRole('button', { name: '考前閃卡（2）' }).click();
+      await p.getByText(/W9 考前閃卡 · 剩 2 張/).waitFor();
+      for (let i = 0; i < 2; i++) {
+        await p.getByRole('button', { name: /顯示答案/ }).click();
+        await p.locator('.rate__btn').nth(2).click();
+      }
+      await p.getByRole('button', { name: '回到小考準備' }).click();
+      await p.locator('.qz-step.is-done', { hasText: '閃卡＋錯題' }).waitFor();
+      // Score of the last sitting (W9, on W8 content) counts toward best 8 of 12.
+      const row = p.locator('.qz-scores tr', { hasText: '9/23' });
+      await row.getByLabel('W9 得分').fill('8');
+      await row.getByLabel('W9 得分').press('Tab');
+      await row.getByLabel('W9 滿分').fill('10');
+      await row.getByLabel('W9 滿分').press('Tab');
+      await p.locator('.qz-standing', { hasText: '已記錄 1 次 · 最好 1 次平均 80% · 已拿到約 3 / 30 分' }).waitFor();
+      await row.getByRole('button', { name: '看 W9 小考準備' }).click();
+      await hero.getByText('考過的小考', { exact: false }).waitFor();
+      await hero.locator('b', { hasText: 'W8' }).waitFor();
+      await p.screenshot({ path: path.join(OUT, '13-quiz-prep.png'), fullPage: true });
+      // The course page keeps the settings.
+      await p.locator('.rail__nav').getByRole('button', { name: '課程' }).click();
+      await p.locator('.course-card', { hasText: 'MATH7861' }).click();
+      await p.getByRole('tab', { name: /評量與考試/ }).click();
+      if (!(await p.locator('#wq-on-MATH7861').isChecked())) throw new Error('weekly quiz toggle should be on for MATH7861');
+      await ctx.close();
+    });
+
     // Phone width, every route, light + dark.
     for (const scheme of ['light', 'dark']) {
       await step(`phone layout (${scheme}) has no horizontal overflow`, async () => {
@@ -297,10 +413,19 @@ const noOverflow = async (page, label) => {
         await p.getByRole('heading', { name: '今天的書桌' }).waitFor();
         await noOverflow(p, `phone-${scheme}-home`);
         await p.screenshot({ path: path.join(OUT, `09-phone-${scheme}-home.png`), fullPage: true });
-        for (const label of ['課程', '書僮', '練習', '計畫', '方法']) {
-          await p.locator('.tabbar').getByRole('button', { name: label }).click();
+        for (const label of ['複習', '課程', '書僮', '練習', '計畫', '方法']) {
+          if (label === '方法') await p.locator('.topbar').getByRole('button', { name: '讀書方法' }).click();
+          else await p.locator('.tabbar').getByRole('button', { name: label }).click();
           await p.waitForTimeout(250);
+          // 10/1 is in the mid-semester break: the day review falls back to the last class day.
+          if (label === '複習') await p.getByText('今天沒課，複習最近一次上課').waitFor();
           await noOverflow(p, `phone-${scheme}-${label}`);
+          if (label === '複習') {
+            await p.getByRole('tab', { name: '小考' }).click();
+            await p.locator('.qz-hero').waitFor();
+            await noOverflow(p, `phone-${scheme}-小考`);
+            await p.screenshot({ path: path.join(OUT, `09-phone-${scheme}-小考.png`), fullPage: true });
+          }
           if (scheme === 'dark' || label === '練習') await p.screenshot({ path: path.join(OUT, `09-phone-${scheme}-${label}.png`), fullPage: true });
         }
         await p.locator('.tabbar').getByRole('button', { name: '課程' }).click();
@@ -324,10 +449,10 @@ const noOverflow = async (page, label) => {
       await p.fill('#cf-code', 'comp7710');
       await p.fill('#cf-name', 'AI for Cyber Security');
       await p.getByRole('button', { name: '新增', exact: true }).click();
-      await p.locator('.course-card', { hasText: 'COMP7710' }).waitFor();
+      await p.locator('.course-card', { hasText: 'COMP7710' }).waitFor({ timeout: 5000 });
+      // Reload lands back on 課程 with the saved course, without needing another click to refresh the view.
       await p.reload();
-      await p.locator('.rail__nav').getByRole('button', { name: '課程' }).click();
-      await p.locator('.course-card', { hasText: 'COMP7710' }).waitFor();
+      await p.locator('.course-card', { hasText: 'COMP7710' }).waitFor({ timeout: 5000 });
       await ctx.close();
     });
   } catch (e) {

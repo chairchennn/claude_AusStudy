@@ -40,12 +40,19 @@
   "data": {
    "date": "2026-10-06",
    "courseCode": "MATH7861",
-   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
-   "minutes": 30,
+   "title": "MATH7861：小考前複習 W9（考前重點＋模擬小考）",
+   "minutes": 40,
    "kind": "practice",
-   "priority": 2,
+   "priority": 1,
    "week": 10,
-   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "why": "週三 12:00 的 Applied class 當場小考 W9 的內容（12 次取最好 8 次，共占 30%）。到「複習 → 小考」看考前重點、做一份模擬小考，錯的題目進閃卡。",
+   "link": {
+    "route": "review",
+    "params": {
+     "tab": "quiz",
+     "course": "MATH7861"
+    }
+   },
    "key": "prep-MATH7861-2026-10-07",
    "done": false,
    "order": 2,
@@ -130,12 +137,19 @@
   "data": {
    "date": "2026-10-13",
    "courseCode": "MATH7861",
-   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
-   "minutes": 30,
+   "title": "MATH7861：小考前複習 W10（考前重點＋模擬小考）",
+   "minutes": 40,
    "kind": "practice",
-   "priority": 2,
+   "priority": 1,
    "week": 11,
-   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "why": "週三 12:00 的 Applied class 當場小考 W10 的內容（12 次取最好 8 次，共占 30%）。到「複習 → 小考」看考前重點、做一份模擬小考，錯的題目進閃卡。",
+   "link": {
+    "route": "review",
+    "params": {
+     "tab": "quiz",
+     "course": "MATH7861"
+    }
+   },
    "key": "prep-MATH7861-2026-10-14",
    "done": false,
    "order": 7,
@@ -220,12 +234,19 @@
   "data": {
    "date": "2026-10-20",
    "courseCode": "MATH7861",
-   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
-   "minutes": 30,
+   "title": "MATH7861：小考前複習 W11（考前重點＋模擬小考）",
+   "minutes": 40,
    "kind": "practice",
-   "priority": 2,
+   "priority": 1,
    "week": 12,
-   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "why": "週三 12:00 的 Applied class 當場小考 W11 的內容（12 次取最好 8 次，共占 30%）。到「複習 → 小考」看考前重點、做一份模擬小考，錯的題目進閃卡。",
+   "link": {
+    "route": "review",
+    "params": {
+     "tab": "quiz",
+     "course": "MATH7861"
+    }
+   },
    "key": "prep-MATH7861-2026-10-21",
    "done": false,
    "order": 12,
@@ -310,12 +331,19 @@
   "data": {
    "date": "2026-10-27",
    "courseCode": "MATH7861",
-   "title": "MATH7861：Applied class 前，複習這週講課、先看題目",
-   "minutes": 30,
+   "title": "MATH7861：小考前複習 W12（考前重點＋模擬小考）",
+   "minutes": 40,
    "kind": "practice",
-   "priority": 2,
+   "priority": 1,
    "week": 13,
-   "why": "Applied class 的練習要當場寫完、占總分 30%（12 次取最好 8 次），先複習才寫得完。",
+   "why": "週三 12:00 的 Applied class 當場小考 W12 的內容（12 次取最好 8 次，共占 30%）。到「複習 → 小考」看考前重點、做一份模擬小考，錯的題目進閃卡。",
+   "link": {
+    "route": "review",
+    "params": {
+     "tab": "quiz",
+     "course": "MATH7861"
+    }
+   },
    "key": "prep-MATH7861-2026-10-28",
    "done": false,
    "order": 17,

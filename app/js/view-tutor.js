@@ -48,6 +48,13 @@ function TutorView({ params }) {
       setSessionId(null);
       return;
     }
+    if (params.resume && params.materials) {
+      const key = params.materials.slice().sort().join(',');
+      const open = s.sessions
+        .filter((x) => !x.ended && x.mode === 'socratic' && (x.materialIds || []).slice().sort().join(',') === key)
+        .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))[0];
+      if (open) return setSessionId(open.id);
+    }
     let cancelled = false;
     setAutoStarting(true);
     createSession({

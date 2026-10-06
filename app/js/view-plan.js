@@ -133,6 +133,7 @@ function TaskRow({ task: t, siblings, compact }) {
         ${!compact && U.isYmd(t.date) ? html`<span>${U.fmtDate(t.date)}</span>` : null}
         ${U.isYmd(t.due) ? html`<span class="task__due">截止 ${U.fmtDate(t.due)}</span>` : null}
         ${t.why ? html`<button type="button" class="link" onClick=${() => setOpen(!open)}>${open ? '收起' : '為什麼'}</button>` : null}
+        ${t.link && t.link.route && !t.done ? html`<button type="button" class="link task__go" onClick=${() => go(t.link.route, t.link.params || {})}>開始 →</button>` : null}
       </div>
       ${open ? html`<p class="task__why">${t.why}</p>` : null}
     </div>

@@ -27,6 +27,7 @@ const COLLECTIONS = {
   tasks: {},
   days: { order: 'date', limit: 120 },
   previews: {},
+  quizprep: {}, // one doc per weekly-quiz sitting: 考前重點 sheet and the score
 };
 const META_DOCS = ['settings', 'plan', 'timetable'];
 
@@ -42,6 +43,7 @@ const Store = (() => {
     tasks: [],
     days: [],
     previews: [],
+    quizprep: [],
     settings: DEFAULT_SETTINGS,
     plan: null,
     timetable: { classes: [] },
@@ -353,16 +355,29 @@ const Store = (() => {
   };
 })();
 
+/* Subscriptions are made in a layout effect (during the commit, before the browser paints) and catch up on any change
+   that landed between render and subscribe; otherwise an update fired right after mount (local data loading, a click
+   just after reload) is lost and the view stays stale until the next unrelated change. */
+
 /** Re-render a component whenever the store changes. */
 function useStore() {
-  const [, setV] = useState(0);
-  useEffect(() => Store.onChange((v) => setV(v)), []);
+  const [, setV] = useState(Store.version());
+  const seen = Store.version();
+  useLayoutEffect(() => {
+    const off = Store.onChange((v) => setV(v));
+    if (Store.version() !== seen) setV(Store.version());
+    return off;
+  }, []);
   return Store.state;
 }
 
 /** Re-render on runtime capability changes (AI ready/denied, db mode). */
 function useRuntime() {
-  const [s, setS] = useState({ ...RT.state });
-  useEffect(() => RT.onChange(setS), []);
+  const [s, setS] = useState(() => ({ ...RT.state }));
+  useLayoutEffect(() => {
+    const off = RT.onChange(setS);
+    setS((prev) => (Object.keys(RT.state).every((k) => prev[k] === RT.state[k]) ? prev : { ...RT.state }));
+    return off;
+  }, []);
   return s;
 }

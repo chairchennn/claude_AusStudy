@@ -63,6 +63,30 @@ function suggestions(s, today) {
         act: () => go('courses', { course: c.code, tab: 'preview', week: next.week }),
       });
   }
+  const sem = s.settings.semester;
+  const toReview = classesOn(today, s.timetable, sem).filter(
+    (cls) => classEnded(today, cls) && !(materialsForClass(s, today, cls).length && materialsForClass(s, today, cls).every((m) => !materialProgress(m, s).next))
+  );
+  for (const cls of toReview.slice(0, 2).reverse())
+    list.unshift({
+      key: 'rev-' + cls.id,
+      course: cls.courseCode,
+      text: `複習今天的 ${CLASS_TYPES[cls.type] || cls.type}（${cls.start}）：${materialsForClass(s, today, cls).length ? '繼續下一步' : '上傳投影片開始'}`,
+      act: () => go('review', { tab: 'day', date: today }),
+    });
+  // A weekly quiz within two days goes to the top until its prep is done.
+  for (const c of courses.filter((x) => weeklyQuizOf(x))) {
+    const sit = nextQuizSitting(c, s.timetable, sem, today);
+    if (!sit || U.daysBetween(today, sit.date) > 2) continue;
+    const st = quizPrepState(c, sit, s);
+    if (st.done === st.total) continue;
+    list.unshift({
+      key: 'quiz-' + c.code + sit.week,
+      course: c.code,
+      text: `${quizWhen(sit)} 小考（考 W${sit.covers}）：考前準備 ${st.done}/${st.total}`,
+      act: () => go('review', { tab: 'quiz', course: c.code }),
+    });
+  }
   for (const w of weakSpots(s.sessions, 2))
     list.push({
       key: 'weak-' + w.session.id + w.turn.at,
@@ -99,13 +123,20 @@ function TodayClasses() {
     <div class="classes__head">
       <h2 class="section__title">${todays.length ? '今天的課' : nextDay ? `下次上課 · ${U.fmtDate(nextDay)}（${U.relDay(nextDay)}）` : '課表'}</h2>
       ${!todays.length ? html`<span class="muted small">今天沒有課${phase.phase === 'break' ? '（期中假）' : phase.holiday ? '（公眾假期）' : ''}</span>` : null}
+      <span class="spacer"></span>
+      <button type="button" class="link" onClick=${() => go('review', { tab: todays.length ? 'day' : 'week' })}>${todays.length ? '到複習頁' : '看這週的複習進度'}</button>
     </div>
     ${shown.length
       ? html`<ul class="classes__list">
           ${shown.map(({ date, cls }) => {
             const c = Store.course(cls.courseCode);
             const week = semesterPhase(date, sem).week;
-            const needsPrev = c && c.preview && cls.type === 'lecture';
+            const needsPrev = c && c.preview && cls.type === 'lecture' && !classStarted(date, cls);
+            const mats = materialsForClass(s, date, cls);
+            const prog = mats.map((m) => materialProgress(m, s));
+            const reviewed = mats.length && prog.every((p) => !p.next);
+            const q = c && weeklyQuizOf(c);
+            const quizSit = q && cls.type === q.classType && !classEnded(date, cls) ? quizSittings(c, tt, sem).find((x) => x.date === date && x.held) : null;
             return html`<li key=${cls.id || cls.courseCode + cls.start} class=${'cls c-' + courseColor(cls.courseCode)}>
               <span class="cls__time">${cls.start}–${cls.end}</span>
               <${CourseChip} code=${cls.courseCode} short />
@@ -116,6 +147,13 @@ function TodayClasses() {
                 ? previewed(cls.courseCode, week)
                   ? html`<button type="button" class="pill pill--ok pill-btn" onClick=${() => go('courses', { course: cls.courseCode, tab: 'preview', preview: `${cls.courseCode}-W${week}` })}>已預習 W${week}</button>`
                   : html`<button type="button" class="pill pill--pen pill-btn" onClick=${() => go('courses', { course: cls.courseCode, tab: 'preview', week })}>預習 W${week}</button>`
+                : null}
+              ${quizSit
+                ? html`<button type="button" class="pill pill--warn pill-btn" onClick=${() => go('review', { tab: 'quiz', course: cls.courseCode })}>小考（考 W${quizSit.covers}）</button>`
+                : null}
+              ${classStarted(date, cls)
+                ? html`<button type="button" class=${'pill pill-btn pill--' + (reviewed ? 'ok' : mats.length ? 'pen' : 'warn')} onClick=${() => go('review', { tab: 'day', date })}>
+                    ${reviewed ? '已複習' : mats.length ? `複習 ${U.sum(prog.map((p) => p.done))}/${U.sum(prog.map((p) => p.total))}` : '上傳投影片複習'}</button>`
                 : null}
             </li>`;
           })}
@@ -147,9 +185,11 @@ function HomeView() {
       <p class="eyebrow">${U.fmtLongDate(today)}${phase.label ? html` · <strong>${phase.label}</strong>` : null}</p>
       <h1 class="hero__title">今天的書桌</h1>
       <p class="hero__sub">
-        ${tasksToday.length ? `${tasksToday.length} 件任務（完成 ${doneCount}）` : '今天還沒排任務'} ·
-        ${due.length ? `${due.length} 張閃卡到期` : '沒有到期的閃卡'} ·
-        ${streak ? `連續讀書 ${streak} 天` : '今天開始累積連續天數'}
+        ${[
+          tasksToday.length ? `${tasksToday.length} 件任務（完成 ${doneCount}）` : '今天還沒排任務',
+          due.length ? `${due.length} 張閃卡到期` : '沒有到期的閃卡',
+          streak ? `連續讀書 ${streak} 天` : '今天開始累積連續天數',
+        ].join(' · ')}
       </p>
     </header>
 
@@ -191,7 +231,7 @@ function HomeView() {
       </${Section}>
 
       <div class="stack">
-        <${Section} title="今日複習">
+        <${Section} title="今日閃卡">
           <div class="review-today">
             <div class="review-today__num"><span class="big-num">${due.length}</span><span class="muted">張到期</span></div>
             <div class="review-today__by">

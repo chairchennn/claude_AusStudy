@@ -3635,8 +3635,58 @@ details.tgroup > summary {
   font-weight: 600;
 }
 .exam-box .w-num {
-  width: 5rem;
+  width: 4.6rem;
+  flex: none;
+}
+.assess tr.is-done .score-in input {
+  color: var(--ink);
+  text-decoration: none;
 }
 .row.nowrap {
   flex-wrap: nowrap;
+}
+.grade-box__sum {
+  display: grid;
+  gap: 0.2rem;
+}
+.grade-rows {
+  list-style: none;
+  display: grid;
+  gap: 0.1rem;
+}
+.grade-rows li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 0.2rem 0.9rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--rule-2);
+  font-size: var(--fs-sm);
+}
+.grade-rows li:last-child {
+  border-bottom: 0;
+}
+.grade-rows li.is-pending {
+  color: var(--ink-3);
+}
+.grade-rows__pts {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+@media (max-width: 480px) {
+  .grade-rows li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .grade-rows__val {
+    grid-column: 1;
+    grid-row: 2;
+    color: var(--ink-2);
+  }
+  .grade-rows__pts {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    align-self: center;
+  }
 }

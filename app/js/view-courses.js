@@ -594,8 +594,13 @@ function GuideView({ sm, material, onRegenerate, ai, onAddTerms }) {
 
 /* ---------- assessments ---------- */
 function AssessmentEditor({ course }) {
+  const s = useStore();
   const list = course.assessments || [];
   const exam = course.exam || {};
+  const quizA = quizAssessmentOf(course);
+  const grade = courseGrade(course, s);
+  const quizRow = quizA && grade.rows.find((r) => r.id === quizA.id);
+  const scoreOf = (prev, field, v) => ({ ...(prev || {}), [field]: v === '' ? '' : Number(v) });
   const save = (assessments) => Store.patch('courses', course.code, { assessments, updatedAt: U.nowIso() });
   const upd = (i, patch) => save(list.map((a, j) => (j === i ? { ...a, ...patch } : a)));
   const add = () => save([...list, { id: U.uid('a'), name: '新評量', due: null, weight: null, kind: 'assignment', status: 'todo' }]);
@@ -610,6 +615,7 @@ function AssessmentEditor({ course }) {
           <${Btn} kind="ghost" size="sm" onClick=${() => go('plan', { parse: true })}>貼上 ECP 讓書僮整理</${Btn}>
         </div>`
       : null}
+    <${GradeSummary} grade=${grade} />
     <div class="panel exam-box">
       <div class="exam-box__label">期末考</div>
       <div class="form-grid">
@@ -622,11 +628,18 @@ function AssessmentEditor({ course }) {
         <${Field} label="備註" id=${'ex-note-' + course.code}>
           <input id=${'ex-note-' + course.code} value=${exam.note || ''} placeholder="例如：hurdle、閉書、可帶一張 A4" onChange=${(e) => setExam({ note: e.target.value })} />
         </${Field}>
+        <${Field} label="成績（考完再填）" id=${'ex-got-' + course.code}>
+          <span class="score-in">
+            <${NumInput} id=${'ex-got-' + course.code} min="0" step="0.5" placeholder="得分" value=${exam.score ? exam.score.got : ''} onCommit=${(v) => setExam({ score: scoreOf(exam.score, 'got', v) })} />
+            <span>/</span>
+            <${NumInput} aria-label="期末考滿分" min="1" step="0.5" placeholder="滿分" value=${exam.score ? exam.score.max : ''} onCommit=${(v) => setExam({ score: scoreOf(exam.score, 'max', v) })} />
+          </span>
+        </${Field}>
       </div>
     </div>
     <div class="table-wrap">
       <table class="assess">
-        <thead><tr><th>評量</th><th>截止</th><th>比重</th><th>狀態</th><th></th></tr></thead>
+        <thead><tr><th>評量</th><th>截止</th><th>比重</th><th>成績</th><th>狀態</th><th></th></tr></thead>
         <tbody>
           ${sorted.map(
             ({ a, i }) => html`<tr key=${a.id || i} class=${a.status === 'done' ? 'is-done' : ''}>
@@ -635,6 +648,15 @@ function AssessmentEditor({ course }) {
               <td class="nowrap" data-label="截止"><input aria-label="截止日" id=${'as-d-' + (a.id || i)} type="date" value=${a.due || ''} onChange=${(e) => upd(i, { due: e.target.value || null })} />
                 ${a.due ? html` <${DaysLeft} date=${a.due} />` : null}</td>
               <td data-label="比重 %"><input aria-label="比重" id=${'as-w-' + (a.id || i)} class="w-num" type="number" min="0" max="100" value=${a.weight ?? ''} onChange=${(e) => upd(i, { weight: Number(e.target.value) || null })} /></td>
+              <td data-label="成績">${quizA && a.id === quizA.id
+                ? html`<button type="button" class="link" onClick=${() => go('review', { tab: 'quiz', course: course.code })}>${
+                    quizRow && quizRow.quiz.recorded ? `已記 ${quizRow.quiz.recorded} 次，平均 ${Math.round(quizRow.pct * 100)}%` : '到小考頁記分數'
+                  }</button>`
+                : html`<span class="score-in">
+                    <${NumInput} aria-label=${`${a.name} 得分`} min="0" step="0.5" placeholder="得分" value=${a.score ? a.score.got : ''} onCommit=${(v) => upd(i, { score: scoreOf(a.score, 'got', v) })} />
+                    <span>/</span>
+                    <${NumInput} aria-label=${`${a.name} 滿分`} min="1" step="0.5" placeholder="滿分" value=${a.score ? a.score.max : ''} onCommit=${(v) => upd(i, { score: scoreOf(a.score, 'max', v) })} />
+                  </span>`}</td>
               <td data-label="狀態"><select aria-label="狀態" id=${'as-s-' + (a.id || i)} value=${a.status || 'todo'} onChange=${(e) => upd(i, { status: e.target.value })}>
                 ${Object.entries(ASSESS_STATUS).map(([k, v]) => html`<option value=${k}>${v}</option>`)}</select></td>
               <td><${ConfirmBtn} label="刪除" confirm="確定" onConfirm=${() => del(i)} /></td>
@@ -646,6 +668,33 @@ function AssessmentEditor({ course }) {
     <div class="row"><${Btn} kind="ghost" icon="plus" onClick=${add}>新增評量</${Btn}>
       <span class="muted small">合計 ${U.sum(list.map((a) => a.weight)) + (Number(exam.weight) || 0)}%</span></div>
     <${WeeklyQuizEditor} course=${course} />
+  </div>`;
+}
+
+/** 目前成績: what is already secured, and where the scored parts are heading. */
+function GradeSummary({ grade }) {
+  if (!grade.scoredWeight) return null;
+  const f = (n) => (Math.round(n * 10) / 10).toString();
+  const pct = (p) => `${Math.round(p * 100)}%`;
+  return html`<div class="panel grade-box">
+    <div class="exam-box__label">目前成績</div>
+    <div class="grade-box__sum">
+      <div><span class="big-num">${f(grade.banked)}</span> <span class="muted">分已經拿到（總分 ${grade.totalWeight}）</span></div>
+      ${grade.projected > grade.banked + 0.05
+        ? html`<div class="muted small">已有分數的 ${grade.scoredWeight}%，照目前的平均最後約 ${f(grade.projected)} 分</div>`
+        : null}
+    </div>
+    <ul class="grade-rows">${grade.rows.map(
+      (r) => html`<li key=${r.id} class=${U.cls(r.pct == null && 'is-pending')}>
+        <span class="grade-rows__name">${r.name}</span>
+        <span class="grade-rows__val">${r.pct == null
+          ? r.exam ? '還沒考' : '還沒有分數'
+          : r.quiz
+            ? `最好 ${r.quiz.counted} 次平均 ${pct(r.pct)}`
+            : `${r.score.got} / ${r.score.max}（${pct(r.pct)}）`}</span>
+        <span class="grade-rows__pts">${r.pct == null ? `占 ${r.weight}%` : `${r.quiz ? '約 ' : ''}${f(r.banked)} / ${r.weight}`}</span>
+      </li>`
+    )}</ul>
   </div>`;
 }
 
@@ -697,7 +746,7 @@ function WeeklyQuizEditor({ course }) {
             <${NumInput} id=${id('w')} class="w-num" min="0" max="100" value=${wq.weight || ''} onCommit=${(v) => set({ weight: num(v) })} />
           </${Field}>
           <${Field} label="講課編號（選填）" id=${id('lw')} hint="填一週就好，其他週會照課表推算">
-            <span class="row nowrap"><span>第</span><${NumInput} id=${id('lw')} class="w-num" min="1" max="13" value=${anchor.week || ''} onCommit=${(v) => setAnchor({ week: num(v) })} />
+            <span class="row wrap"><span>第</span><${NumInput} id=${id('lw')} class="w-num" min="1" max="13" value=${anchor.week || ''} onCommit=${(v) => setAnchor({ week: num(v) })} />
               <span>週從 L</span><${NumInput} aria-label="第一堂講課的編號" id=${id('lf')} class="w-num" min="1" value=${anchor.from || ''} onCommit=${(v) => setAnchor({ from: num(v) })} /><span>開始</span></span>
           </${Field}>
         </div>
@@ -712,7 +761,7 @@ function WeeklyQuizEditor({ course }) {
         ${lectures
           ? html`<p class="muted small">講課編號：${Object.entries(lectures).filter(([, r]) => r).map(([w]) => `W${w} ${lect(Number(w))}`).join('、')}</p>`
           : null}
-        ${coming.length ? html`<${Btn} kind="ghost" size="sm" icon="right" onClick=${() => go('review', { tab: 'quiz', course: course.code })}>到小考準備</${Btn}>` : null}`
+        ${coming.length ? html`<div class="row"><${Btn} kind="ghost" size="sm" icon="right" onClick=${() => go('review', { tab: 'quiz', course: course.code })}>到小考準備</${Btn}></div>` : null}`
       : null}
   </div>`;
 }

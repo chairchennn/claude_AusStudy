@@ -113,6 +113,58 @@ function quizStanding(q, records) {
   };
 }
 
+/* ---------- grades ---------- */
+const quizPrepId = (code, week) => `${code}-W${week}`;
+
+/** Each sitting's recorded score ({got, max} or null), in the order of quizSittings(). */
+function quizRecords(course, quizprep, timetable, sem) {
+  return quizSittings(course, timetable, sem).map((x) => {
+    const d = (quizprep || []).find((p) => p.id === quizPrepId(course.code, x.week));
+    return (d && d.score) || null;
+  });
+}
+
+/** The assessment the weekly quizzes count toward: weeklyQuiz.assessmentId, or the course's only 'quiz' assessment. */
+function quizAssessmentOf(course) {
+  const q = weeklyQuizOf(course);
+  if (!q) return null;
+  const list = course.assessments || [];
+  const quizzes = list.filter((a) => a.kind === 'quiz');
+  return list.find((a) => a.id === q.assessmentId) || (quizzes.length === 1 ? quizzes[0] : null);
+}
+
+/** got / max as 0-1, or null while either is missing. */
+const scorePct = (sc) =>
+  sc && Number(sc.max) > 0 && sc.got !== '' && sc.got != null && Number.isFinite(Number(sc.got)) ? U.clamp(Number(sc.got) / Number(sc.max), 0, 1) : null;
+
+/**
+ * Where a course grade stands, out of the total weight (normally 100): every assessment and the final exam with its
+ * score so far. banked = marks already secured; projected = marks if the current quiz average holds.
+ */
+function courseGrade(course, state) {
+  const q = weeklyQuizOf(course);
+  const quizA = quizAssessmentOf(course);
+  const row = (id, name, weight, pct, extra = {}) => ({ id, name, weight, pct, banked: pct == null ? null : pct * weight, projected: pct == null ? null : pct * weight, ...extra });
+  const rows = (course.assessments || []).map((a) => {
+    const weight = Number(a.weight) || 0;
+    if (quizA && a.id === quizA.id) {
+      const st = quizStanding({ ...q, weight }, quizRecords(course, state.quizprep, state.timetable, state.settings.semester));
+      return { ...row(a.id, a.name, weight, st.avg), banked: st.banked, projected: st.projected, quiz: st };
+    }
+    return row(a.id, a.name, weight, scorePct(a.score), { score: a.score });
+  });
+  const exam = course.exam || {};
+  if (Number(exam.weight)) rows.push(row('exam', exam.name || '期末考', Number(exam.weight), scorePct(exam.score), { score: exam.score, exam: true }));
+  const scored = rows.filter((r) => r.pct != null);
+  return {
+    rows,
+    banked: U.sum(scored.map((r) => r.banked || 0)),
+    projected: U.sum(scored.map((r) => r.projected || 0)),
+    scoredWeight: U.sum(scored.map((r) => r.weight)),
+    totalWeight: U.sum(rows.map((r) => r.weight)),
+  };
+}
+
 /* ---------- lecture numbers (L1, L2, …) per teaching week ---------- */
 /** Lectures of one course held in a teaching week (public holidays skipped). */
 function lectureCount(course, w, timetable, sem) {

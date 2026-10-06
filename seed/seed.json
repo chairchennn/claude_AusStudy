@@ -415,7 +415,8 @@
    "toWeek": 13,
    "best": 8,
    "of": 12,
-   "weight": 30
+   "weight": 30,
+   "assessmentId": "a-math-1"
   },
   "lectureAnchor": {
    "week": 9,

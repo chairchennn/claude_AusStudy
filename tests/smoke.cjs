@@ -423,6 +423,17 @@ const noOverflow = async (page, label) => {
       await p.locator('.wq-preview li', { hasText: '10/7 週三 12:00 考 W10（L27–28）的內容' }).waitFor();
       await p.locator('#wq-covers-MATH7861').selectOption('prev');
       await p.locator('.wq-preview li', { hasText: '10/7 週三 12:00 考 W9（L24–26）的內容' }).waitFor();
+      // Grades: the quiz score recorded above counts toward its assessment; a mid-semester score adds to the total.
+      await p.locator('.grade-rows li', { hasText: 'Applied class exercises' }).filter({ hasText: '最好 1 次平均 80%' }).filter({ hasText: '約 3 / 30' }).waitFor();
+      await p.getByLabel('In-semester examination（期中考） 得分').fill('25');
+      await p.getByLabel('In-semester examination（期中考） 得分').press('Tab');
+      await p.getByLabel('In-semester examination（期中考） 滿分').fill('25');
+      await p.getByLabel('In-semester examination（期中考） 滿分').press('Tab');
+      await p.locator('.grade-box__sum', { hasText: '23 分已經拿到（總分 100）' }).waitFor();
+      await p.locator('.grade-box__sum', { hasText: '已有分數的 50%，照目前的平均最後約 44 分' }).waitFor();
+      const inSem = await p.evaluate(() => window.__db.get('courses/MATH7861').assessments.find((a) => a.id === 'a-math-2').score);
+      if (!inSem || inSem.got !== 25 || inSem.max !== 25) throw new Error('mid-semester score not saved: ' + JSON.stringify(inSem));
+      await p.screenshot({ path: path.join(OUT, '14-grades.png'), fullPage: true });
       await ctx.close();
     });
 

@@ -283,7 +283,6 @@ const QUIZ_STEPS = [
   { id: 'mock', label: '模擬小考' },
   { id: 'cards', label: '閃卡＋錯題' },
 ];
-const quizPrepId = (code, week) => `${code}-W${week}`;
 
 /** What exists for one sitting: the slides it covers, the 考前重點 sheet, mock quizzes, cards, and the four steps. */
 function quizPrepState(course, sit, s = Store.state) {
